@@ -1,0 +1,274 @@
+"use client"
+
+import { useState, useRef, useEffect } from "react"
+import {
+  Bold,
+  Italic,
+  Underline,
+  List,
+  ListOrdered,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Link,
+  Code,
+  Heading2,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
+interface RichTextEditorProps {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  minHeight?: string
+  id?: string
+  name?: string
+  disabled?: boolean
+}
+
+export function RichTextEditor({
+  value,
+  onChange,
+  placeholder = "Digite seu texto aqui...",
+  minHeight = "200px",
+  id,
+  name,
+  disabled = false,
+}: RichTextEditorProps) {
+  const editorRef = useRef<HTMLDivElement>(null)
+  const [linkUrl, setLinkUrl] = useState("")
+  const [linkText, setLinkText] = useState("")
+  const [showLinkPopover, setShowLinkPopover] = useState(false)
+
+  // Sincronizar o conteúdo do editor com o valor externo
+  useEffect(() => {
+    if (editorRef.current && value !== editorRef.current.innerHTML) {
+      editorRef.current.innerHTML = value
+    }
+  }, [value])
+
+  // Manipular mudanças no editor
+  const handleInput = () => {
+    if (editorRef.current) {
+      onChange(editorRef.current.innerHTML)
+    }
+  }
+
+  // Aplicar formatação
+  const execCommand = (command: string, value = "") => {
+    if (disabled) return
+    document.execCommand(command, false, value)
+    handleInput()
+    if (editorRef.current) {
+      editorRef.current.focus()
+    }
+  }
+
+  // Inserir link
+  const insertLink = () => {
+    if (!linkUrl) return
+
+    const text = linkText || linkUrl
+    execCommand("insertHTML", `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${text}</a>`)
+
+    setLinkUrl("")
+    setLinkText("")
+    setShowLinkPopover(false)
+  }
+
+  return (
+    <div className="rich-text-editor" style={{ opacity: disabled ? 0.7 : 1 }}>
+      <div className="rich-text-editor-toolbar">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("bold")}
+          disabled={disabled}
+        >
+          <Bold size={18} />
+          <span className="sr-only">Negrito</span>
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("italic")}
+          disabled={disabled}
+        >
+          <Italic size={18} />
+          <span className="sr-only">Itálico</span>
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("underline")}
+          disabled={disabled}
+        >
+          <Underline size={18} />
+          <span className="sr-only">Sublinhado</span>
+        </Button>
+
+        <span className="mx-1 text-muted-foreground">|</span>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("insertUnorderedList")}
+          disabled={disabled}
+        >
+          <List size={18} />
+          <span className="sr-only">Lista não ordenada</span>
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("insertOrderedList")}
+          disabled={disabled}
+        >
+          <ListOrdered size={18} />
+          <span className="sr-only">Lista ordenada</span>
+        </Button>
+
+        <span className="mx-1 text-muted-foreground">|</span>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("justifyLeft")}
+          disabled={disabled}
+        >
+          <AlignLeft size={18} />
+          <span className="sr-only">Alinhar à esquerda</span>
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("justifyCenter")}
+          disabled={disabled}
+        >
+          <AlignCenter size={18} />
+          <span className="sr-only">Centralizar</span>
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("justifyRight")}
+          disabled={disabled}
+        >
+          <AlignRight size={18} />
+          <span className="sr-only">Alinhar à direita</span>
+        </Button>
+
+        <span className="mx-1 text-muted-foreground">|</span>
+
+        <Popover open={showLinkPopover} onOpenChange={setShowLinkPopover}>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="ghost" size="sm" className="rich-text-editor-button" disabled={disabled}>
+              <Link size={18} />
+              <span className="sr-only">Inserir link</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <h4 className="font-medium leading-none">Inserir Link</h4>
+                <p className="text-sm text-muted-foreground">Adicione um link ao seu texto.</p>
+              </div>
+              <div className="grid gap-2">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="linkUrl" className="text-right">
+                    URL
+                  </Label>
+                  <Input
+                    id="linkUrl"
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    className="col-span-3"
+                    placeholder="https://exemplo.com"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="linkText" className="text-right">
+                    Texto
+                  </Label>
+                  <Input
+                    id="linkText"
+                    value={linkText}
+                    onChange={(e) => setLinkText(e.target.value)}
+                    className="col-span-3"
+                    placeholder="Texto do link (opcional)"
+                  />
+                </div>
+              </div>
+              <Button type="button" onClick={insertLink}>
+                Inserir Link
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("formatBlock", "<h2>")}
+          disabled={disabled}
+        >
+          <Heading2 size={18} />
+          <span className="sr-only">Título</span>
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rich-text-editor-button"
+          onClick={() => execCommand("formatBlock", "<pre>")}
+          disabled={disabled}
+        >
+          <Code size={18} />
+          <span className="sr-only">Código</span>
+        </Button>
+      </div>
+
+      <div
+        ref={editorRef}
+        className="rich-text-editor-content"
+        contentEditable={!disabled}
+        onInput={handleInput}
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+        dangerouslySetInnerHTML={{ __html: value }}
+        style={{ minHeight }}
+        placeholder={placeholder}
+        id={id}
+        data-name={name}
+      />
+
+      <input type="hidden" name={name} value={value} />
+    </div>
+  )
+}
