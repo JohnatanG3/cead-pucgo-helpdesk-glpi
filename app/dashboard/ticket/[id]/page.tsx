@@ -321,7 +321,7 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="ml-auto submit-button" disabled={isSubmitting}>
+                <Button type="submit" variant="default" disabled={isSubmitting}>
                   <Send className="mr-2 h-4 w-4" />
                   {isSubmitting ? "Enviando..." : "Enviar Comentário"}
                 </Button>

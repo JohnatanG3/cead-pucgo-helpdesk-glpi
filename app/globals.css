@@ -190,7 +190,7 @@
 }
 
 .rich-text-editor-content {
-  @apply p-3 min-h-[150px] focus:outline-none;
+  @apply p-3 min-h-[150px] focus:outline-none w-full;
 }
 
 /* Indicadores de prioridade */
@@ -283,4 +283,14 @@
 /* Botão de enviar chamado melhorado */
 .submit-button {
   @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 font-medium rounded-md px-4 py-2 shadow-sm hover:shadow-md active:scale-95 cursor-pointer;
+}
+
+/* Estilos específicos para os botões de filtro na página admin */
+[role="tablist"] [data-state="active"] {
+  background-color: #1e4b7a !important; /* Azul CEAD */
+  color: white !important;
+}
+
+[role="tablist"] [role="tab"]:hover {
+  background-color: rgba(30, 75, 122, 0.1);
 }

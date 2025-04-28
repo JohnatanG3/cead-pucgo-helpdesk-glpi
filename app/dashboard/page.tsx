@@ -65,7 +65,7 @@ export default function DashboardPage() {
 	const [category, setCategory] = useState("");
 	const [priority, setPriority] = useState("");
 	const [description, setDescription] = useState("");
-	const [file, setFile] = useState<File | null>(null);
+	const [files, setFiles] = useState<File[]>([]);
 
 	// Verificar autenticação
 	useEffect(() => {
@@ -117,20 +117,20 @@ export default function DashboardPage() {
 			const result = await createTicket(newTicket);
 			const ticketId = result.id;
 
-			// Se tiver arquivo, fazer upload e vincular ao ticket
-			if (file) {
+			// Se tiver arquivos, fazer upload e vincular ao ticket
+			if (files.length > 0) {
 				try {
-					// Upload do documento
-					const document = await uploadDocument(file, 1); // 1 é o ID do usuário atual (simulado)
+					// Upload de cada documento
+					for (const file of files) {
+						const document = await uploadDocument(file, 1); // 1 é o ID do usuário atual (simulado)
+						await linkDocumentToTicket(document.id, ticketId);
+					}
 
-					// Vincular documento ao ticket
-					await linkDocumentToTicket(document.id, ticketId);
-
-					toast.success("Arquivo anexado com sucesso!");
+					toast.success(`${files.length} arquivo(s) anexado(s) com sucesso!`);
 				} catch (uploadError) {
-					console.error("Erro ao fazer upload do arquivo:", uploadError);
+					console.error("Erro ao fazer upload dos arquivos:", uploadError);
 					toast.error(
-						"Não foi possível anexar o arquivo, mas o chamado foi criado.",
+						"Não foi possível anexar todos os arquivos, mas o chamado foi criado.",
 					);
 				}
 			}
@@ -144,7 +144,7 @@ export default function DashboardPage() {
 			setCategory("");
 			setPriority("");
 			setDescription("");
-			setFile(null);
+			setFiles([]);
 
 			// Recarregar tickets
 			const updatedTickets = await getTickets({
@@ -164,19 +164,18 @@ export default function DashboardPage() {
 	};
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		// biome-ignore lint/complexity/useOptionalChain: <explanation>
-		if (e.target.files && e.target.files[0]) {
-			setFile(e.target.files[0]);
+		if (e.target.files && e.target.files.length > 0) {
+			// Converter FileList para array e adicionar aos arquivos existentes
+			const newFiles = Array.from(e.target.files);
+			setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+
+			// Limpar o input para permitir selecionar os mesmos arquivos novamente
+			e.target.value = "";
 		}
 	};
 
-	const handleRemoveFile = () => {
-		setFile(null);
-		// Resetar o input de arquivo
-		const fileInput = document.getElementById("attachment") as HTMLInputElement;
-		if (fileInput) {
-			fileInput.value = "";
-		}
+	const handleRemoveFile = (index: number) => {
+		setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
 	};
 
 	// Função para formatar a data
@@ -259,7 +258,7 @@ export default function DashboardPage() {
 				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
 					<div className="flex items-center gap-2">
 						<img
-							src="/puc-goias.svg"
+							src="/placeholder.svg?height=32&width=32"
 							alt="Logo CEAD PUC GO"
 							className="h-8 w-8"
 						/>
@@ -322,7 +321,15 @@ export default function DashboardPage() {
 									className="w-full pl-8"
 								/>
 							</div>
-							<Button>
+							<Button
+								variant="default"
+								onClick={() => {
+									document.getElementById("new-ticket-form")?.scrollIntoView({
+										behavior: "smooth",
+										block: "start",
+									});
+								}}
+							>
 								<Plus className="mr-2 h-4 w-4" />
 								Novo Chamado
 							</Button>
@@ -330,7 +337,7 @@ export default function DashboardPage() {
 					</div>
 					<Separator />
 					<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-						<Card>
+						<Card id="new-ticket-form">
 							<CardHeader>
 								<CardTitle>Abrir Novo Chamado</CardTitle>
 								<CardDescription>
@@ -422,31 +429,34 @@ export default function DashboardPage() {
 										/>
 									</div>
 									<div className="space-y-2">
-										<Label htmlFor="attachment">Anexo (opcional)</Label>
+										<Label htmlFor="attachment">Anexos (opcional)</Label>
 										<Input
 											id="attachment"
 											type="file"
 											onChange={handleFileChange}
 											disabled={isSubmitting}
 											accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
+											className="file:bg-cead-blue file:text-white file:border-0 file:rounded-md file:px-2 file:py-1 file:mr-2 file:cursor-pointer"
+											multiple
 										/>
-										{file && (
+										{files.length > 0 && (
 											<FileAttachment
-												file={file}
+												files={files}
 												onRemove={handleRemoveFile}
 												className="mt-2"
 											/>
 										)}
 										<p className="text-xs text-muted-foreground">
 											Formatos aceitos: PDF, DOC, DOCX, JPG, PNG, XLS, XLSX
-											(máx. 5MB)
+											(máx. 5MB por arquivo)
 										</p>
 									</div>
 								</CardContent>
 								<CardFooter>
 									<Button
 										type="submit"
-										className="w-full submit-button"
+										className="w-full"
+										variant="default"
 										disabled={isSubmitting}
 									>
 										{isSubmitting ? "Enviando..." : "Enviar Chamado"}
@@ -494,7 +504,7 @@ export default function DashboardPage() {
 							</CardContent>
 							<CardFooter>
 								<Button
-									variant="outline"
+									variant="default"
 									className="w-full"
 									onClick={() => router.push("/dashboard/tickets")}
 								>
@@ -530,7 +540,7 @@ export default function DashboardPage() {
 									<ul className="mt-1 space-y-1 text-sm text-muted-foreground">
 										<li>
 											<a
-												href="/manual-do-coordenador"
+												href="/manualdo-coordenador"
 												className="text-primary hover:underline"
 											>
 												Manual do Coordenador
@@ -573,7 +583,7 @@ export default function DashboardPage() {
 							Termos de Uso
 						</a>
 						<a
-							href="/policita-de-privacidade"
+							href="/politica-de-privacidade"
 							className="text-sm text-muted-foreground hover:underline"
 						>
 							Política de Privacidade

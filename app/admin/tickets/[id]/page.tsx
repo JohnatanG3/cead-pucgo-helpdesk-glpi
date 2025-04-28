@@ -450,7 +450,7 @@ export default function AdminTicketDetailPage({
 											</Button>
 											<Button
 												type="submit"
-												className="submit-button"
+												variant="default"
 												disabled={isSubmitting}
 											>
 												{isSubmitting ? "Enviando..." : "Enviar Resposta"}

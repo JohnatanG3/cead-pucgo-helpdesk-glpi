@@ -42,18 +42,30 @@ export function RichTextEditor({
   const [linkUrl, setLinkUrl] = useState("")
   const [linkText, setLinkText] = useState("")
   const [showLinkPopover, setShowLinkPopover] = useState(false)
+  const [isInitialRender, setIsInitialRender] = useState(true)
+  const [isEmpty, setIsEmpty] = useState(!value)
 
-  // Sincronizar o conteúdo do editor com o valor externo
+  // Sincronizar o conteúdo do editor com o valor externo apenas na primeira renderização
+  // ou quando o valor muda externamente de forma significativa
   useEffect(() => {
-    if (editorRef.current && value !== editorRef.current.innerHTML) {
+    if (
+      editorRef.current &&
+      (isInitialRender || !editorRef.current.innerHTML || editorRef.current.innerHTML === "<br>")
+    ) {
       editorRef.current.innerHTML = value
+      setIsInitialRender(false)
+      setIsEmpty(!value)
     }
-  }, [value])
+  }, [value, isInitialRender])
 
   // Manipular mudanças no editor
   const handleInput = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML)
+      const content = editorRef.current.innerHTML
+      onChange(content)
+
+      // Verificar se o conteúdo está vazio para mostrar o placeholder
+      setIsEmpty(!content || content === "<br>" || content === "")
     }
   }
 
@@ -77,6 +89,21 @@ export function RichTextEditor({
     setLinkUrl("")
     setLinkText("")
     setShowLinkPopover(false)
+  }
+
+  // Quando o editor recebe foco, remover o placeholder
+  const handleFocus = () => {
+    if (isEmpty && editorRef.current) {
+      setIsEmpty(false)
+    }
+  }
+
+  // Quando o editor perde foco, verificar se está vazio para mostrar o placeholder
+  const handleBlur = () => {
+    if (editorRef.current) {
+      const content = editorRef.current.innerHTML
+      setIsEmpty(!content || content === "<br>" || content === "")
+    }
   }
 
   return (
@@ -255,18 +282,22 @@ export function RichTextEditor({
         </Button>
       </div>
 
-      <div
-        ref={editorRef}
-        className="rich-text-editor-content"
-        contentEditable={!disabled}
-        onInput={handleInput}
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-        dangerouslySetInnerHTML={{ __html: value }}
-        style={{ minHeight }}
-        placeholder={placeholder}
-        id={id}
-        data-name={name}
-      />
+      <div className="relative">
+        <div
+          ref={editorRef}
+          className="rich-text-editor-content"
+          contentEditable={!disabled}
+          onInput={handleInput}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          style={{ minHeight }}
+          id={id}
+          data-name={name}
+        />
+        {isEmpty && (
+          <div className="absolute top-0 left-0 p-3 pointer-events-none text-muted-foreground">{placeholder}</div>
+        )}
+      </div>
 
       <input type="hidden" name={name} value={value} />
     </div>

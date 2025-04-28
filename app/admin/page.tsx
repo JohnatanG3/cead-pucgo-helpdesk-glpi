@@ -178,7 +178,7 @@ export default function AdminDashboard() {
 				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
 					<div className="flex items-center gap-2">
 						<img
-							src="/puc-goias.svg"
+							src="/placeholder.svg?height=32&width=32"
 							alt="Logo CEAD PUC GO"
 							className="h-8 w-8"
 						/>
@@ -240,25 +240,25 @@ export default function AdminDashboard() {
 						</div>
 						<div className="flex flex-wrap gap-2">
 							<Link href="/admin/categories">
-								<Button variant="outline">
+								<Button variant="default">
 									<Layers className="mr-2 h-4 w-4" />
 									Gerenciar Categorias
 								</Button>
 							</Link>
 							<Link href="/admin/new-ticket">
-								<Button variant="outline">
+								<Button variant="default">
 									<Plus className="mr-2 h-4 w-4" />
 									Abrir Chamado
 								</Button>
 							</Link>
 							<Link href="/admin/reports">
-								<Button variant="outline">
+								<Button variant="default">
 									<BarChart3 className="mr-2 h-4 w-4" />
 									Relatórios
 								</Button>
 							</Link>
 							<Link href="/admin/tickets">
-								<Button>
+								<Button variant="default">
 									<FileText className="mr-2 h-4 w-4" />
 									Ver Todos os Chamados
 								</Button>
@@ -305,7 +305,7 @@ export default function AdminDashboard() {
 									</div>
 									<DropdownMenu>
 										<DropdownMenuTrigger asChild>
-											<Button variant="outline" className="flex gap-2">
+											<Button variant="default" className="flex gap-2">
 												<Filter className="h-4 w-4" />
 												Filtrar
 											</Button>
@@ -418,12 +418,32 @@ export default function AdminDashboard() {
 							</div>
 						</CardHeader>
 						<CardContent>
-							<Tabs defaultValue="all">
-								<TabsList className="mb-4">
-									<TabsTrigger value="all">Todos</TabsTrigger>
-									<TabsTrigger value="pending">Pendentes</TabsTrigger>
-									<TabsTrigger value="in_progress">Em Andamento</TabsTrigger>
-									<TabsTrigger value="resolved">Resolvidos</TabsTrigger>
+							<Tabs defaultValue="all" className="w-full">
+								<TabsList className="mb-4 bg-muted w-full justify-start">
+									<TabsTrigger
+										value="all"
+										className="data-[state=active]:bg-cead-blue data-[state=active]:text-white"
+									>
+										Todos
+									</TabsTrigger>
+									<TabsTrigger
+										value="pending"
+										className="data-[state=active]:bg-cead-blue data-[state=active]:text-white"
+									>
+										Pendentes
+									</TabsTrigger>
+									<TabsTrigger
+										value="in_progress"
+										className="data-[state=active]:bg-cead-blue data-[state=active]:text-white"
+									>
+										Em Andamento
+									</TabsTrigger>
+									<TabsTrigger
+										value="resolved"
+										className="data-[state=active]:bg-cead-blue data-[state=active]:text-white"
+									>
+										Resolvidos
+									</TabsTrigger>
 								</TabsList>
 								<TabsContent value="all" className="space-y-4">
 									<div className="overflow-x-auto">
@@ -463,7 +483,7 @@ export default function AdminDashboard() {
 															</td>
 															<td className="py-2 px-2">
 																<Link href={`/admin/tickets/${ticket.id}`}>
-																	<Button variant="ghost" size="sm">
+																	<Button variant="default" size="sm">
 																		Responder
 																	</Button>
 																</Link>
@@ -511,10 +531,10 @@ export default function AdminDashboard() {
 									resultados
 								</div>
 								<div className="flex gap-1">
-									<Button variant="outline" size="sm">
+									<Button variant="default" size="sm">
 										Anterior
 									</Button>
-									<Button variant="outline" size="sm">
+									<Button variant="default" size="sm">
 										Próximo
 									</Button>
 								</div>

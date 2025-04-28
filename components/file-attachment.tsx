@@ -3,15 +3,13 @@ import { X, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-interface FileAttachmentProps {
-  file: File | null
+interface SingleFileAttachmentProps {
+  file: File
   onRemove: () => void
   className?: string
 }
 
-export function FileAttachment({ file, onRemove, className }: FileAttachmentProps) {
-  if (!file) return null
-
+export function SingleFileAttachment({ file, onRemove, className }: SingleFileAttachmentProps) {
   // Determinar o ícone com base no tipo de arquivo
   const getFileIcon = () => {
     const fileType = file.type.split("/")[0]
@@ -41,6 +39,24 @@ export function FileAttachment({ file, onRemove, className }: FileAttachmentProp
         <X className="h-4 w-4" />
         <span className="sr-only">Remover arquivo</span>
       </Button>
+    </div>
+  )
+}
+
+interface FileAttachmentProps {
+  files: File[]
+  onRemove: (index: number) => void
+  className?: string
+}
+
+export function FileAttachment({ files, onRemove, className }: FileAttachmentProps) {
+  if (!files.length) return null
+
+  return (
+    <div className={cn("space-y-2", className)}>
+      {files.map((file, index) => (
+        <SingleFileAttachment key={`${file.name}-${index}`} file={file} onRemove={() => onRemove(index)} />
+      ))}
     </div>
   )
 }
