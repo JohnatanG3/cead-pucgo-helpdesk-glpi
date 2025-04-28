@@ -4,16 +4,14 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
 import Link from "next/link"
-import { ArrowLeft, Paperclip, Send } from "lucide-react"
+import { ArrowLeft, Paperclip, Send, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
   getTicket,
@@ -22,20 +20,28 @@ import {
   uploadDocument,
   linkDocumentToTicket,
   getUser,
+  getGroups,
   mapGLPIStatusToString,
   mapGLPIPriorityToString,
   type GLPITicket,
   type GLPITicketFollowup,
   type GLPIUser,
+  type GLPIGroup,
 } from "@/lib/glpi-api"
+import { useAuth } from "@/contexts/auth-context"
+
+// Importe o novo componente
+import { FileInput } from "@/components/file-input"
 
 export default function TicketDetailPage({ params }: { params: { id: string } }) {
-  const { data: session, status } = useSession()
+  const { user } = useAuth()
   const router = useRouter()
   const ticketId = Number.parseInt(params.id)
 
   const [ticket, setTicket] = useState<GLPITicket | null>(null)
   const [followups, setFollowups] = useState<Array<GLPITicketFollowup & { user?: GLPIUser }>>([])
+  const [assignedUser, setAssignedUser] = useState<GLPIUser | null>(null)
+  const [assignedGroup, setAssignedGroup] = useState<GLPIGroup | null>(null)
   const [newComment, setNewComment] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -43,47 +49,66 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
 
   // Verificar autenticação
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (!user) {
       router.push("/")
+      return
     }
-  }, [status, router])
+
+    loadTicketData()
+  }, [user, router]) // Removido ticketId da dependência pois é constante
 
   // Carregar dados do ticket
-  useEffect(() => {
-    async function loadTicketData() {
-      try {
-        const ticketData = await getTicket(ticketId)
-        setTicket(ticketData)
+  async function loadTicketData() {
+    try {
+      const ticketData = await getTicket(ticketId)
+      setTicket(ticketData)
 
-        // Carregar followups
-        const followupsData = await getTicketFollowups(ticketId)
-
-        // Para cada followup, carregar informações do usuário
-        const followupsWithUsers = await Promise.all(
-          followupsData.map(async (followup) => {
-            try {
-              const userData = await getUser(followup.users_id)
-              return { ...followup, user: userData }
-            } catch (error) {
-              console.error(`Erro ao carregar usuário ${followup.users_id}:`, error)
-              return followup
-            }
-          }),
-        )
-
-        setFollowups(followupsWithUsers)
-      } catch (error) {
-        console.error("Erro ao carregar dados do ticket:", error)
-        toast.error("Não foi possível carregar os detalhes do chamado.")
-      } finally {
-        setIsLoading(false)
+      // Carregar informações de atribuição
+      if (ticketData.users_id_assign) {
+        try {
+          const userData = await getUser(ticketData.users_id_assign)
+          setAssignedUser(userData)
+        } catch (error) {
+          console.error("Erro ao carregar usuário atribuído:", error)
+        }
       }
-    }
 
-    if (status === "authenticated" && ticketId) {
-      loadTicketData()
+      if (ticketData.groups_id_assign) {
+        try {
+          const groupsData = await getGroups()
+          const group = groupsData.find((g) => g.id === ticketData.groups_id_assign)
+          if (group) {
+            setAssignedGroup(group)
+          }
+        } catch (error) {
+          console.error("Erro ao carregar grupo atribuído:", error)
+        }
+      }
+
+      // Carregar followups
+      const followupsData = await getTicketFollowups(ticketId)
+
+      // Para cada followup, carregar informações do usuário
+      const followupsWithUsers = await Promise.all(
+        followupsData.map(async (followup: GLPITicketFollowup) => {
+          try {
+            const userData = await getUser(followup.users_id)
+            return { ...followup, user: userData }
+          } catch (error) {
+            console.error(`Erro ao carregar usuário ${followup.users_id}:`, error)
+            return followup
+          }
+        }),
+      )
+
+      setFollowups(followupsWithUsers)
+    } catch (error) {
+      console.error("Erro ao carregar dados do ticket:", error)
+      toast.error("Não foi possível carregar os detalhes do chamado.")
+    } finally {
+      setIsLoading(false)
     }
-  }, [status, ticketId])
+  }
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -94,14 +119,14 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
       const followupResult = await addTicketFollowup(
         ticketId,
         newComment,
-        1, // ID do usuário atual (em um sistema real, seria obtido da sessão)
+        user?.id ? Number.parseInt(user.id) : 1, // ID do usuário atual
       )
 
       // Se tiver arquivo, fazer upload e vincular ao ticket
       if (file) {
         try {
           // Upload do documento
-          const document = await uploadDocument(file, 1) // 1 é o ID do usuário atual (simulado)
+          const document = await uploadDocument(file, user?.id ? Number.parseInt(user.id) : 1)
 
           // Vincular documento ao ticket
           await linkDocumentToTicket(document.id, ticketId)
@@ -122,7 +147,7 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
       // Recarregar followups
       const followupsData = await getTicketFollowups(ticketId)
       const followupsWithUsers = await Promise.all(
-        followupsData.map(async (followup) => {
+        followupsData.map(async (followup: GLPITicketFollowup) => {
           try {
             const userData = await getUser(followup.users_id)
             return { ...followup, user: userData }
@@ -196,7 +221,7 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
     }
   }
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -247,6 +272,22 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
               {getStatusBadge(ticket.status)}
             </div>
             <p className="text-sm text-muted-foreground mt-1">Aberto em {formatDate(ticket.date_creation)}</p>
+
+            {/* Mostrar informações de atribuição */}
+            {(assignedUser || assignedGroup) && (
+              <div className="mt-2">
+                <p className="text-sm">
+                  <span className="font-medium">Atribuído a: </span>
+                  {assignedUser ? (
+                    <span>{assignedUser.name}</span>
+                  ) : assignedGroup ? (
+                    <span>Grupo {assignedGroup.name}</span>
+                  ) : (
+                    <span>Não atribuído</span>
+                  )}
+                </p>
+              </div>
+            )}
           </div>
 
           <Card className="mb-6">
@@ -307,14 +348,30 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
                   rows={4}
                   disabled={isSubmitting}
                 />
+                {/* Substitua o input de arquivo existente por: */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Input id="attachment" type="file" onChange={handleFileChange} disabled={isSubmitting} />
-                  </div>
+                  <FileInput
+                    id="attachment"
+                    onChange={handleFileChange}
+                    disabled={isSubmitting}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    buttonText="Anexar arquivo"
+                    selectedFiles={file ? [file] : []} // Convertendo o único arquivo em um array
+                  />
                   {file && (
                     <div className="flex items-center gap-2 p-2 border rounded">
                       <Paperclip className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">{file.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto h-6 w-6 p-0"
+                        onClick={() => setFile(null)}
+                      >
+                        <span className="sr-only">Remover</span>
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">Formatos aceitos: PDF, DOC, DOCX, JPG, PNG (máx. 5MB)</p>

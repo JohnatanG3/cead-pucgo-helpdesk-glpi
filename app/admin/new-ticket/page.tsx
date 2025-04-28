@@ -18,18 +18,27 @@ import {
   createTicket,
   uploadDocument,
   linkDocumentToTicket,
+  getUsers,
+  getGroups,
   type GLPITicket,
   type GLPICategory,
+  type GLPIUser,
+  type GLPIGroup,
 } from "@/lib/glpi-api"
 import { useAuth } from "@/contexts/auth-context"
 import { FileAttachment } from "@/components/file-attachment"
 import { RichTextEditor } from "@/components/rich-text-editor"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+// Importe o novo componente
+import { FileInput } from "@/components/file-input"
 
 export default function AdminNewTicketPage() {
   const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
   const [categories, setCategories] = useState<GLPICategory[]>([])
+  const [technicians, setTechnicians] = useState<GLPIUser[]>([])
+  const [groups, setGroups] = useState<GLPIGroup[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -39,6 +48,9 @@ export default function AdminNewTicketPage() {
   const [priority, setPriority] = useState("")
   const [description, setDescription] = useState("")
   const [files, setFiles] = useState<File[]>([])
+  const [assignmentType, setAssignmentType] = useState<"none" | "user" | "group">("none")
+  const [assignedUser, setAssignedUser] = useState("")
+  const [assignedGroup, setAssignedGroup] = useState("")
 
   // Verificar autenticação e permissão
   useEffect(() => {
@@ -50,18 +62,25 @@ export default function AdminNewTicketPage() {
         router.push("/dashboard")
       } else {
         // Carregar dados apenas se for admin
-        loadCategories()
+        loadData()
       }
     }
   }, [user, authLoading, router])
 
-  // Carregar categorias
-  async function loadCategories() {
+  // Carregar categorias, usuários e grupos
+  async function loadData() {
     try {
-      const categoriesData = await getCategories()
+      const [categoriesData, usersData, groupsData] = await Promise.all([
+        getCategories(),
+        getUsers({ is_active: "1" }),
+        getGroups(),
+      ])
+
       setCategories(categoriesData)
+      setTechnicians(usersData)
+      setGroups(groupsData)
     } catch (error) {
-      console.error("Erro ao carregar categorias:", error)
+      console.error("Erro ao carregar dados:", error)
       toast.error("Não foi possível carregar as categorias.")
     } finally {
       setIsLoading(false)
@@ -82,6 +101,13 @@ export default function AdminNewTicketPage() {
         // Outros campos necessários para o GLPI
         status: 1, // Novo
         type: 1, // Incidente
+      }
+
+      // Adicionar atribuição conforme selecionado
+      if (assignmentType === "user" && assignedUser) {
+        newTicket.users_id_assign = Number.parseInt(assignedUser)
+      } else if (assignmentType === "group" && assignedGroup) {
+        newTicket.groups_id_assign = Number.parseInt(assignedGroup)
       }
 
       const result = await createTicket(newTicket)
@@ -127,6 +153,11 @@ export default function AdminNewTicketPage() {
 
   const handleRemoveFile = (index: number) => {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index))
+  }
+
+  // Handler para mudança de tipo de atribuição com tipagem correta
+  const handleAssignmentTypeChange = (value: string) => {
+    setAssignmentType(value as "none" | "user" | "group")
   }
 
   if (authLoading || isLoading) {
@@ -228,6 +259,77 @@ export default function AdminNewTicketPage() {
                     </Select>
                   </div>
                 </div>
+
+                {/* Seção de atribuição do chamado */}
+                <div className="space-y-2">
+                  <Label>Atribuir chamado</Label>
+                  <RadioGroup value={assignmentType} onValueChange={handleAssignmentTypeChange}>
+                    <RadioGroupItem value="none" id="assignment-none">
+                      <Label htmlFor="assignment-none" className="ml-2 cursor-pointer">
+                        Não atribuir (padrão)
+                      </Label>
+                    </RadioGroupItem>
+                    <RadioGroupItem value="user" id="assignment-user">
+                      <Label htmlFor="assignment-user" className="ml-2 cursor-pointer">
+                        Atribuir a um técnico
+                      </Label>
+                    </RadioGroupItem>
+                    <RadioGroupItem value="group" id="assignment-group">
+                      <Label htmlFor="assignment-group" className="ml-2 cursor-pointer">
+                        Atribuir a um grupo
+                      </Label>
+                    </RadioGroupItem>
+                  </RadioGroup>
+                </div>
+
+                {/* Mostrar seleção de técnico se "user" estiver selecionado */}
+                {assignmentType === "user" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="assigned-user">Técnico responsável</Label>
+                    <Select
+                      value={assignedUser}
+                      onValueChange={setAssignedUser}
+                      disabled={isSubmitting}
+                      required={assignmentType === "user"}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um técnico" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {technicians.map((tech) => (
+                          <SelectItem key={tech.id} value={tech.id.toString()}>
+                            {tech.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Mostrar seleção de grupo se "group" estiver selecionado */}
+                {assignmentType === "group" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="assigned-group">Grupo responsável</Label>
+                    <Select
+                      value={assignedGroup}
+                      onValueChange={setAssignedGroup}
+                      disabled={isSubmitting}
+                      required={assignmentType === "group"}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um grupo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {groups.map((group) => (
+                          <SelectItem key={group.id} value={group.id.toString()}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="description">Descrição</Label>
                   <RichTextEditor
@@ -240,16 +342,16 @@ export default function AdminNewTicketPage() {
                     disabled={isSubmitting}
                   />
                 </div>
+                {/* Substitua o input de arquivo existente por: */}
                 <div className="space-y-2">
                   <Label htmlFor="attachment">Anexos (opcional)</Label>
-                  <Input
+                  <FileInput
                     id="attachment"
-                    type="file"
                     onChange={handleFileChange}
                     disabled={isSubmitting}
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
-                    className="file:bg-cead-blue file:text-white file:border-0 file:rounded-md file:px-2 file:py-1 file:mr-2 file:cursor-pointer"
                     multiple
+                    selectedFiles={files} // Passando a lista de arquivos selecionados
                   />
                   {files.length > 0 && (
                     <div className="mt-2">

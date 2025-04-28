@@ -196,6 +196,8 @@ function getMockData<T>(endpoint: string, options: RequestInit = {}): T {
 				date_mod: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
 				entities_id: 1,
 				users_id_recipient: 1,
+				users_id_assign: 2,
+				groups_id_assign: null,
 				type: 1,
 				itilcategories_id: 1,
 				urgency: 2,
@@ -212,6 +214,8 @@ function getMockData<T>(endpoint: string, options: RequestInit = {}): T {
 				date_mod: new Date(Date.now() - 86400000 * 1).toISOString(), // 1 dia atrás
 				entities_id: 1,
 				users_id_recipient: 1,
+				users_id_assign: null,
+				groups_id_assign: 1,
 				type: 1,
 				itilcategories_id: 2,
 				urgency: 3,
@@ -228,6 +232,8 @@ function getMockData<T>(endpoint: string, options: RequestInit = {}): T {
 				date_mod: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 dias atrás
 				entities_id: 1,
 				users_id_recipient: 1,
+				users_id_assign: 3,
+				groups_id_assign: null,
 				type: 1,
 				itilcategories_id: 3,
 				urgency: 1,
@@ -274,6 +280,45 @@ function getMockData<T>(endpoint: string, options: RequestInit = {}): T {
 				realname: "Silva",
 				email: "coordenador@pucgoias.edu.br",
 				phone: "(62) 3946-1001",
+				entities_id: 1,
+			},
+			{
+				id: 3,
+				name: "Secretária",
+				firstname: "Maria",
+				realname: "Oliveira",
+				email: "secretaria@pucgoias.edu.br",
+				phone: "(62) 3946-1002",
+				entities_id: 1,
+			},
+			{
+				id: 4,
+				name: "Técnico",
+				firstname: "Pedro",
+				realname: "Santos",
+				email: "suporte@pucgoias.edu.br",
+				phone: "(62) 3946-1003",
+				entities_id: 1,
+			},
+		],
+		// Adicionar dados simulados para grupos
+		Group: [
+			{
+				id: 1,
+				name: "Secretaria Acadêmica",
+				comment: "Grupo da secretaria acadêmica",
+				entities_id: 1,
+			},
+			{
+				id: 2,
+				name: "Suporte Técnico",
+				comment: "Equipe de suporte técnico",
+				entities_id: 1,
+			},
+			{
+				id: 3,
+				name: "Coordenação de Cursos",
+				comment: "Coordenadores de cursos",
 				entities_id: 1,
 			},
 		],
@@ -343,6 +388,8 @@ export interface GLPITicket {
 	date_mod: string;
 	entities_id: number;
 	users_id_recipient: number;
+	users_id_assign?: number; // Responsável individual (atribuído a)
+	groups_id_assign?: number; // Grupo responsável
 	time_to_resolve?: string;
 	type: number;
 	itilcategories_id: number;
@@ -385,6 +432,14 @@ export interface GLPIDocument {
 	mime: string;
 	date_creation: string;
 	users_id: number;
+}
+
+// Adicione esta interface para grupos
+export interface GLPIGroup {
+	id: number;
+	name: string;
+	comment?: string;
+	entities_id: number;
 }
 
 // Importe o gerenciador de cache
@@ -633,4 +688,26 @@ export function mapStringToGLPIPriority(priority: string): number {
 
 export async function getTicket(id: number): Promise<GLPITicket> {
 	return fetchGLPI<GLPITicket>(`Ticket/${id}`);
+}
+
+// Função para obter grupos
+export async function getGroups(
+	params: Record<string, string> = {},
+): Promise<GLPIGroup[]> {
+	const queryParams = new URLSearchParams(params).toString();
+	const cacheKey = `groups:${queryParams}`;
+
+	// Tenta obter do cache primeiro
+	const cachedData = cacheManager.get<GLPIGroup[]>(cacheKey);
+	if (cachedData) {
+		return cachedData;
+	}
+
+	// Se não estiver em cache, busca da API
+	const data = await fetchGLPI<GLPIGroup[]>(`Group?${queryParams}`);
+
+	// Armazena no cache por 5 minutos (300 segundos)
+	cacheManager.set(cacheKey, data, 300);
+
+	return data;
 }
