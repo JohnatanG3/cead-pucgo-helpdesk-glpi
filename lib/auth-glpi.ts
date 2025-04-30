@@ -8,6 +8,7 @@ interface AuthResult {
 		name: string;
 		email: string;
 		role: string;
+		group_id?: string; // Adicionado como opcional
 	};
 	sessionToken?: string;
 	error?: string;
@@ -41,6 +42,9 @@ export async function authenticateWithGLPI(
 		// Determina o papel do usuário com base no email
 		const isAdmin = username.includes("admin") || username.includes("suporte");
 
+		// Atribui um grupo para usuários de suporte
+		const groupId = username.includes("suporte") ? "1" : undefined;
+
 		return {
 			success: true,
 			// biome-ignore lint/style/useTemplate: <explanation>
@@ -50,6 +54,7 @@ export async function authenticateWithGLPI(
 				name: isAdmin ? "Administrador" : "Usuário",
 				email: username,
 				role: isAdmin ? "admin" : "user",
+				group_id: groupId,
 			},
 		};
 	}

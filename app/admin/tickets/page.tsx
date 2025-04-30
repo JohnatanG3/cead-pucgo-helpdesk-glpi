@@ -1,0 +1,427 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, Plus, Search, Bug } from "lucide-react"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PriorityIndicator } from "@/components/priority-indicator"
+import { getTickets, mapGLPIStatusToString, mapGLPIPriorityToString } from "@/lib/glpi-api"
+import { useAuth } from "@/contexts/auth-context"
+
+export default function AdminTicketsPage() {
+  const { user, isLoading: authLoading } = useAuth()
+  const router = useRouter()
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  const [tickets, setTickets] = useState<any[]>([])
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  const [filteredTickets, setFilteredTickets] = useState<any[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [priorityFilter, setPriorityFilter] = useState("all")
+  const [isLoading, setIsLoading] = useState(true)
+  const [timeoutOccurred, setTimeoutOccurred] = useState(false)
+
+  // Verificar autenticação e permissão
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        router.push("/")
+      } else if (user.role !== "admin") {
+        toast.error("Você não tem permissão para acessar esta página.")
+        router.push("/dashboard")
+      } else {
+        loadTickets()
+      }
+    }
+  }, [user, authLoading, router])
+
+  // Timeout para evitar carregamento infinito
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.log("Timeout ao carregar tickets")
+        setTimeoutOccurred(true)
+        setIsLoading(false)
+      }
+    }, 10000) // 10 segundos de timeout
+
+    return () => clearTimeout(timer)
+  }, [isLoading])
+
+  // Carregar tickets
+  async function loadTickets() {
+    try {
+      console.log("AdminTicketsPage - Carregando tickets...")
+      setIsLoading(true)
+
+      // Usar Promise.race para adicionar um timeout
+      const ticketsData = await Promise.race([
+        getTickets(),
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        new Promise<any[]>((resolve) =>
+          setTimeout(() => {
+            console.log("Timeout ao carregar tickets, usando dados vazios")
+            resolve([])
+          }, 8000),
+        ),
+      ])
+
+      console.log("AdminTicketsPage - Tickets carregados:", ticketsData.length)
+      setTickets(Array.isArray(ticketsData) ? ticketsData : [])
+      setFilteredTickets(Array.isArray(ticketsData) ? ticketsData : [])
+    } catch (error) {
+      console.error("AdminTicketsPage - Erro ao carregar tickets:", error)
+      toast.error("Não foi possível carregar os chamados.")
+      setTickets([])
+      setFilteredTickets([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Filtrar tickets
+  useEffect(() => {
+    if (!tickets || tickets.length === 0) {
+      setFilteredTickets([])
+      return
+    }
+
+    let result = [...tickets]
+
+    // Filtrar por status
+    if (statusFilter !== "all") {
+      result = result.filter((ticket) => mapGLPIStatusToString(ticket.status) === statusFilter)
+    }
+
+    // Filtrar por prioridade
+    if (priorityFilter !== "all") {
+      result = result.filter((ticket) => mapGLPIPriorityToString(ticket.priority) === priorityFilter)
+    }
+
+    // Filtrar por busca
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(
+        (ticket) =>
+          ticket.name?.toLowerCase().includes(query) ||
+          ticket.content?.toLowerCase().includes(query) ||
+          ticket.id?.toString().includes(query),
+      )
+    }
+
+    setFilteredTickets(result)
+  }, [tickets, statusFilter, priorityFilter, searchQuery])
+
+  // Formatar data
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "Data desconhecida"
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    } catch (e) {
+      return "Data inválida"
+    }
+  }
+
+  const handleDebug = (ticketId: number) => {
+    router.push(`/admin/tickets/debug/${ticketId}`)
+  }
+
+  if (authLoading || (isLoading && !timeoutOccurred)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          {/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Carregando...</p>
+          {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
+          <button
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+            onClick={() => {
+              setIsLoading(false)
+              setTimeoutOccurred(true)
+            }}
+          >
+            Forçar carregamento
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" asChild>
+            <Link href="/admin">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <h2 className="text-3xl font-bold tracking-tight">Gerenciamento de Chamados</h2>
+        </div>
+        <Button size="sm" asChild>
+          <Link href="/admin/new-ticket">
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Chamado
+          </Link>
+        </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Buscar chamados..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filtrar por status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="new">Novos</SelectItem>
+            <SelectItem value="pending">Pendentes</SelectItem>
+            <SelectItem value="in_progress">Em andamento</SelectItem>
+            <SelectItem value="resolved">Resolvidos</SelectItem>
+            <SelectItem value="closed">Fechados</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filtrar por prioridade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as prioridades</SelectItem>
+            <SelectItem value="low">Baixa</SelectItem>
+            <SelectItem value="medium">Média</SelectItem>
+            <SelectItem value="high">Alta</SelectItem>
+            <SelectItem value="urgent">Urgente</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Tabs defaultValue="all" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsTrigger value="pending">Pendentes</TabsTrigger>
+          <TabsTrigger value="in_progress">Em Andamento</TabsTrigger>
+          <TabsTrigger value="resolved">Resolvidos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Todos os Chamados</CardTitle>
+              <CardDescription>
+                {filteredTickets.length} chamado{filteredTickets.length !== 1 && "s"} encontrado
+                {filteredTickets.length !== 1 && "s"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {timeoutOccurred && tickets.length === 0 ? (
+                  <div className="text-center py-6">
+                    <p className="text-amber-500 font-medium">Tempo limite excedido ao carregar chamados.</p>
+                    <Button
+                      variant="outline"
+                      className="mt-4"
+                      onClick={() => {
+                        setTimeoutOccurred(false)
+                        setIsLoading(true)
+                        loadTickets()
+                      }}
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
+                ) : filteredTickets.length > 0 ? (
+                  filteredTickets.map((ticket) => (
+                    <div key={ticket.id} className="flex items-center justify-between space-x-4 border-b pb-4">
+                      <div className="flex items-center space-x-4">
+                        <PriorityIndicator priority={mapGLPIPriorityToString(ticket.priority)} />
+                        <div>
+                          <p className="text-sm font-medium leading-none">{ticket.name}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(ticket.date_creation)} · ID: {ticket.id}
+                            </span>
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full ${
+                                mapGLPIStatusToString(ticket.status) === "in_progress"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : mapGLPIStatusToString(ticket.status) === "resolved" ||
+                                      mapGLPIStatusToString(ticket.status) === "closed"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
+                              {mapGLPIStatusToString(ticket.status) === "new" ||
+                              mapGLPIStatusToString(ticket.status) === "pending"
+                                ? "Pendente"
+                                : mapGLPIStatusToString(ticket.status) === "in_progress"
+                                  ? "Em andamento"
+                                  : "Resolvido"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/admin/tickets/${ticket.id}`}>Detalhes</Link>
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => handleDebug(ticket.id)}>
+                          <Bug className="h-4 w-4 mr-1" />
+                          Debug
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    Nenhum chamado encontrado com os filtros selecionados.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pending" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chamados Pendentes</CardTitle>
+              <CardDescription>Chamados que aguardam atendimento</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {filteredTickets
+                  .filter(
+                    (ticket) =>
+                      mapGLPIStatusToString(ticket.status) === "new" ||
+                      mapGLPIStatusToString(ticket.status) === "pending",
+                  )
+                  .map((ticket) => (
+                    <div key={ticket.id} className="flex items-center justify-between space-x-4 border-b pb-4">
+                      <div className="flex items-center space-x-4">
+                        <PriorityIndicator priority={mapGLPIPriorityToString(ticket.priority)} />
+                        <div>
+                          <p className="text-sm font-medium leading-none">{ticket.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(ticket.date_creation)} · ID: {ticket.id}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/admin/tickets/${ticket.id}`}>Detalhes</Link>
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => handleDebug(ticket.id)}>
+                          <Bug className="h-4 w-4 mr-1" />
+                          Debug
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="in_progress" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chamados Em Andamento</CardTitle>
+              <CardDescription>Chamados que estão sendo atendidos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {filteredTickets
+                  .filter((ticket) => mapGLPIStatusToString(ticket.status) === "in_progress")
+                  .map((ticket) => (
+                    <div key={ticket.id} className="flex items-center justify-between space-x-4 border-b pb-4">
+                      <div className="flex items-center space-x-4">
+                        <PriorityIndicator priority={mapGLPIPriorityToString(ticket.priority)} />
+                        <div>
+                          <p className="text-sm font-medium leading-none">{ticket.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(ticket.date_creation)} · ID: {ticket.id}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/admin/tickets/${ticket.id}`}>Detalhes</Link>
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => handleDebug(ticket.id)}>
+                          <Bug className="h-4 w-4 mr-1" />
+                          Debug
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="resolved" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chamados Resolvidos</CardTitle>
+              <CardDescription>Chamados que foram concluídos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {filteredTickets
+                  .filter(
+                    (ticket) =>
+                      mapGLPIStatusToString(ticket.status) === "resolved" ||
+                      mapGLPIStatusToString(ticket.status) === "closed",
+                  )
+                  .map((ticket) => (
+                    <div key={ticket.id} className="flex items-center justify-between space-x-4 border-b pb-4">
+                      <div className="flex items-center space-x-4">
+                        <PriorityIndicator priority={mapGLPIPriorityToString(ticket.priority)} />
+                        <div>
+                          <p className="text-sm font-medium leading-none">{ticket.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(ticket.date_creation)} · ID: {ticket.id}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/admin/tickets/${ticket.id}`}>Detalhes</Link>
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => handleDebug(ticket.id)}>
+                          <Bug className="h-4 w-4 mr-1" />
+                          Debug
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}

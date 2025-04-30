@@ -61,35 +61,58 @@ export default function AdminDashboard() {
 		{ title: "Resolvidos (Mês)", value: 0, change: "Carregando..." },
 	];
 
-	// Verificar autenticação e permissão
+	// Verificar autenticação e permissão - Simplificado para evitar loops
 	useEffect(() => {
+		// Verificação simplificada para evitar loops
 		if (!authLoading) {
 			if (!user) {
+				console.log("Usuário não autenticado, redirecionando para login");
 				router.push("/");
-			} else if (user.role !== "admin") {
+				return;
+			}
+
+			if (user.role !== "admin") {
+				console.log("Usuário não é admin, redirecionando para dashboard");
 				toast.error("Você não tem permissão para acessar esta página.");
 				router.push("/dashboard");
-			} else {
-				// Carregar dados apenas se for admin
-				loadTickets();
+				return;
 			}
+
+			// Se chegou aqui, o usuário é admin e está autenticado
+			loadTickets();
 		}
 	}, [user, authLoading, router]);
 
-	// Carregar tickets
+	// Carregar tickets - Simplificado com tratamento de erros melhorado
 	async function loadTickets() {
 		try {
-			const ticketsData = await getTickets({
-				sort: "date_creation",
-				order: "DESC",
-				limit: "10",
-			});
+			console.log("Carregando tickets...");
 
-			setTickets(ticketsData);
-			setIsLoading(false);
+			// Adicionando um timeout para garantir que não fique em loop infinito
+			const ticketsData = await Promise.race([
+				getTickets({
+					sort: "date_creation",
+					order: "DESC",
+					limit: "10",
+				}),
+				// Timeout de 5 segundos para evitar espera infinita
+				new Promise<GLPITicket[]>((resolve) =>
+					setTimeout(() => {
+						console.log("Timeout ao carregar tickets, usando dados vazios");
+						resolve([]);
+					}, 5000),
+				),
+			]);
+
+			console.log("Tickets carregados:", ticketsData.length);
+			setTickets(Array.isArray(ticketsData) ? ticketsData : []);
 		} catch (error) {
 			console.error("Erro ao carregar tickets:", error);
 			toast.error("Não foi possível carregar os chamados.");
+			// Definir tickets como array vazio em caso de erro
+			setTickets([]);
+		} finally {
+			// Sempre definir isLoading como false, mesmo em caso de erro
 			setIsLoading(false);
 		}
 	}
@@ -97,8 +120,8 @@ export default function AdminDashboard() {
 	// Filtrar tickets com base na busca
 	const filteredTickets = tickets.filter(
 		(ticket) =>
-			ticket.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			ticket.id.toString().includes(searchQuery),
+			ticket.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			ticket.id?.toString().includes(searchQuery),
 	);
 
 	// Função para mapear status do GLPI para componente Badge
@@ -123,21 +146,27 @@ export default function AdminDashboard() {
 
 	// Função para formatar a data
 	const formatDate = (dateString: string) => {
-		const date = new Date(dateString);
-		return date.toLocaleDateString("pt-BR");
+		if (!dateString) return "Data desconhecida";
+		try {
+			const date = new Date(dateString);
+			return date.toLocaleDateString("pt-BR");
+		} catch (e) {
+			return "Data inválida";
+		}
 	};
 
-	if (authLoading || isLoading) {
-		return (
-			<div className="flex min-h-screen items-center justify-center">
-				<div className="text-center">
-					{/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-					<p className="mt-4 text-muted-foreground">Carregando...</p>
-				</div>
-			</div>
-		);
-	}
+	// Mostrar tela de carregamento apenas por um tempo limitado
+	useEffect(() => {
+		// Se ainda estiver carregando após 10 segundos, forçar a renderização da página
+		const timer = setTimeout(() => {
+			if (isLoading) {
+				console.log("Forçando renderização após timeout");
+				setIsLoading(false);
+			}
+		}, 10000);
+
+		return () => clearTimeout(timer);
+	}, [isLoading]);
 
 	// Calcular estatísticas com base nos tickets carregados
 	const calculateStats = () => {
@@ -170,7 +199,47 @@ export default function AdminDashboard() {
 		];
 	};
 
-	const currentStats = calculateStats();
+	const currentStats = isLoading ? stats : calculateStats();
+
+	// Se estiver carregando por muito tempo, mostrar uma mensagem de erro
+	if (authLoading && isLoading) {
+		return (
+			<div className="flex min-h-screen flex-col">
+				<header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
+					<div className="container flex h-16 items-center justify-between px-4 md:px-6">
+						<div className="flex items-center gap-2">
+							<img
+								src="/puc-goias.svg"
+								alt="Logo CEAD PUC GO"
+								className="h-8 w-8"
+							/>
+							<span className="text-lg font-semibold">
+								CEAD - PUC GO (Admin)
+							</span>
+						</div>
+					</div>
+				</header>
+
+				<div className="flex flex-1 items-center justify-center">
+					<div className="text-center">
+						{/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
+						<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+						<p className="mt-4 text-muted-foreground">Carregando...</p>
+						<Button
+							variant="outline"
+							className="mt-4"
+							onClick={() => {
+								setIsLoading(false);
+								toast.info("Forçando carregamento da página");
+							}}
+						>
+							Forçar carregamento
+						</Button>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex min-h-screen flex-col">
@@ -178,7 +247,7 @@ export default function AdminDashboard() {
 				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
 					<div className="flex items-center gap-2">
 						<img
-							src="/puc-goias.svg"
+							src="/cead-puc-go-logo.png"
 							alt="Logo CEAD PUC GO"
 							className="h-8 w-8"
 						/>
@@ -200,10 +269,7 @@ export default function AdminDashboard() {
 									className="flex items-center gap-2 text-white hover:bg-white/10"
 								>
 									<Avatar className="h-8 w-8">
-										<AvatarImage
-											src="/placeholder.svg?height=32&width=32"
-											alt="Avatar"
-										/>
+										<AvatarImage src="/diverse-user-avatars.png" alt="Avatar" />
 										<AvatarFallback>AD</AvatarFallback>
 									</Avatar>
 									<span className="hidden md:inline-flex">
@@ -496,7 +562,9 @@ export default function AdminDashboard() {
 															colSpan={8}
 															className="py-4 text-center text-muted-foreground"
 														>
-															Nenhum chamado encontrado.
+															{isLoading
+																? "Carregando chamados..."
+																: "Nenhum chamado encontrado."}
 														</td>
 													</tr>
 												)}
