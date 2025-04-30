@@ -24,13 +24,15 @@ import {
   type GLPICategory,
   type GLPIUser,
   type GLPIGroup,
+  GLPIError,
 } from "@/lib/glpi-api"
 import { useAuth } from "@/contexts/auth-context"
 import { FileAttachment } from "@/components/file-attachment"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-// Importe o novo componente
 import { FileInput } from "@/components/file-input"
+// Importar as funções de validação
+import { ticketSchema, validateData } from "@/lib/validation"
 
 export default function AdminNewTicketPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -41,6 +43,8 @@ export default function AdminNewTicketPage() {
   const [groups, setGroups] = useState<GLPIGroup[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Estado para erros de validação
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({})
 
   // Form state
   const [title, setTitle] = useState("")
@@ -81,7 +85,11 @@ export default function AdminNewTicketPage() {
       setGroups(groupsData)
     } catch (error) {
       console.error("Erro ao carregar dados:", error)
-      toast.error("Não foi possível carregar as categorias.")
+      if (error instanceof GLPIError) {
+        toast.error(error.getUserFriendlyMessage())
+      } else {
+        toast.error("Não foi possível carregar as categorias.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -89,6 +97,37 @@ export default function AdminNewTicketPage() {
 
   const handleSubmitTicket = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Limpar erros de validação anteriores
+    setValidationErrors({})
+
+    // Validar dados do formulário
+    const formData = {
+      title,
+      category,
+      priority,
+      description,
+      assignmentType,
+      assignedUser,
+      assignedGroup,
+    }
+
+    const validationResult = validateData(ticketSchema, formData)
+
+    if (!validationResult.success) {
+      // Mostrar erros de validação
+      setValidationErrors(validationResult.errors || {})
+
+      // Mostrar toast com o primeiro erro
+      const firstErrorField = Object.keys(validationResult.errors || {})[0]
+      const firstError = validationResult.errors?.[firstErrorField]?.[0]
+      if (firstError) {
+        toast.error(firstError)
+      }
+
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -125,7 +164,11 @@ export default function AdminNewTicketPage() {
           toast.success(`${files.length} arquivo(s) anexado(s) com sucesso!`)
         } catch (uploadError) {
           console.error("Erro ao fazer upload dos arquivos:", uploadError)
-          toast.error("Não foi possível anexar todos os arquivos, mas o chamado foi criado.")
+          if (uploadError instanceof GLPIError) {
+            toast.error(`Não foi possível anexar todos os arquivos: ${uploadError.getUserFriendlyMessage()}`)
+          } else {
+            toast.error("Não foi possível anexar todos os arquivos, mas o chamado foi criado.")
+          }
         }
       }
 
@@ -135,7 +178,11 @@ export default function AdminNewTicketPage() {
       router.push(`/admin/tickets/${ticketId}`)
     } catch (error) {
       console.error("Erro ao criar chamado:", error)
-      toast.error("Não foi possível criar o chamado. Tente novamente mais tarde.")
+      if (error instanceof GLPIError) {
+        toast.error(`Não foi possível criar o chamado: ${error.getUserFriendlyMessage()}`)
+      } else {
+        toast.error("Não foi possível criar o chamado. Tente novamente mais tarde.")
+      }
       setIsSubmitting(false)
     }
   }
@@ -158,6 +205,19 @@ export default function AdminNewTicketPage() {
   // Handler para mudança de tipo de atribuição com tipagem correta
   const handleAssignmentTypeChange = (value: string) => {
     setAssignmentType(value as "none" | "user" | "group")
+    // Limpar seleções anteriores
+    if (value !== "user") setAssignedUser("")
+    if (value !== "group") setAssignedGroup("")
+  }
+
+  // Função para verificar se um campo tem erro
+  const hasError = (field: string): boolean => {
+    return !!validationErrors[field]
+  }
+
+  // Função para obter a mensagem de erro de um campo
+  const getErrorMessage = (field: string): string => {
+    return validationErrors[field]?.[0] || ""
   }
 
   if (authLoading || isLoading) {
@@ -198,7 +258,9 @@ export default function AdminNewTicketPage() {
             <form onSubmit={handleSubmitTicket}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Título do Chamado</Label>
+                  <Label htmlFor="title" className={hasError("title") ? "text-destructive" : ""}>
+                    Título do Chamado
+                  </Label>
                   <Input
                     id="title"
                     placeholder="Resumo do problema"
@@ -206,13 +268,17 @@ export default function AdminNewTicketPage() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     disabled={isSubmitting}
+                    className={hasError("title") ? "border-destructive" : ""}
                   />
+                  {hasError("title") && <p className="text-xs text-destructive">{getErrorMessage("title")}</p>}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="category">Categoria</Label>
+                    <Label htmlFor="category" className={hasError("category") ? "text-destructive" : ""}>
+                      Categoria
+                    </Label>
                     <Select value={category} onValueChange={setCategory} disabled={isSubmitting} required>
-                      <SelectTrigger>
+                      <SelectTrigger className={hasError("category") ? "border-destructive" : ""}>
                         <SelectValue placeholder="Selecione uma categoria" />
                       </SelectTrigger>
                       <SelectContent>
@@ -223,11 +289,14 @@ export default function AdminNewTicketPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {hasError("category") && <p className="text-xs text-destructive">{getErrorMessage("category")}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="priority">Prioridade</Label>
+                    <Label htmlFor="priority" className={hasError("priority") ? "text-destructive" : ""}>
+                      Prioridade
+                    </Label>
                     <Select value={priority} onValueChange={setPriority} disabled={isSubmitting} required>
-                      <SelectTrigger>
+                      <SelectTrigger className={hasError("priority") ? "border-destructive" : ""}>
                         <SelectValue placeholder="Selecione a prioridade" />
                       </SelectTrigger>
                       <SelectContent>
@@ -257,13 +326,18 @@ export default function AdminNewTicketPage() {
                         </SelectItem>
                       </SelectContent>
                     </Select>
+                    {hasError("priority") && <p className="text-xs text-destructive">{getErrorMessage("priority")}</p>}
                   </div>
                 </div>
 
                 {/* Seção de atribuição do chamado */}
                 <div className="space-y-2">
-                  <Label>Atribuir chamado</Label>
-                  <RadioGroup value={assignmentType} onValueChange={handleAssignmentTypeChange}>
+                  <Label className={hasError("assignmentType") ? "text-destructive" : ""}>Atribuir chamado</Label>
+                  <RadioGroup
+                    value={assignmentType}
+                    onValueChange={handleAssignmentTypeChange}
+                    className={hasError("assignmentType") ? "border-destructive rounded p-2" : ""}
+                  >
                     <RadioGroupItem value="none" id="assignment-none">
                       <Label htmlFor="assignment-none" className="ml-2 cursor-pointer">
                         Não atribuir (padrão)
@@ -280,19 +354,24 @@ export default function AdminNewTicketPage() {
                       </Label>
                     </RadioGroupItem>
                   </RadioGroup>
+                  {hasError("assignmentType") && (
+                    <p className="text-xs text-destructive">{getErrorMessage("assignmentType")}</p>
+                  )}
                 </div>
 
                 {/* Mostrar seleção de técnico se "user" estiver selecionado */}
                 {assignmentType === "user" && (
                   <div className="space-y-2">
-                    <Label htmlFor="assigned-user">Técnico responsável</Label>
+                    <Label htmlFor="assigned-user" className={hasError("assignedUser") ? "text-destructive" : ""}>
+                      Técnico responsável
+                    </Label>
                     <Select
                       value={assignedUser}
                       onValueChange={setAssignedUser}
                       disabled={isSubmitting}
                       required={assignmentType === "user"}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={hasError("assignedUser") ? "border-destructive" : ""}>
                         <SelectValue placeholder="Selecione um técnico" />
                       </SelectTrigger>
                       <SelectContent>
@@ -303,20 +382,25 @@ export default function AdminNewTicketPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {hasError("assignedUser") && (
+                      <p className="text-xs text-destructive">{getErrorMessage("assignedUser")}</p>
+                    )}
                   </div>
                 )}
 
                 {/* Mostrar seleção de grupo se "group" estiver selecionado */}
                 {assignmentType === "group" && (
                   <div className="space-y-2">
-                    <Label htmlFor="assigned-group">Grupo responsável</Label>
+                    <Label htmlFor="assigned-group" className={hasError("assignedGroup") ? "text-destructive" : ""}>
+                      Grupo responsável
+                    </Label>
                     <Select
                       value={assignedGroup}
                       onValueChange={setAssignedGroup}
                       disabled={isSubmitting}
                       required={assignmentType === "group"}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={hasError("assignedGroup") ? "border-destructive" : ""}>
                         <SelectValue placeholder="Selecione um grupo" />
                       </SelectTrigger>
                       <SelectContent>
@@ -327,11 +411,16 @@ export default function AdminNewTicketPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {hasError("assignedGroup") && (
+                      <p className="text-xs text-destructive">{getErrorMessage("assignedGroup")}</p>
+                    )}
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Descrição</Label>
+                  <Label htmlFor="description" className={hasError("description") ? "text-destructive" : ""}>
+                    Descrição
+                  </Label>
                   <RichTextEditor
                     id="description"
                     name="description"
@@ -340,9 +429,12 @@ export default function AdminNewTicketPage() {
                     placeholder="Descreva detalhadamente o problema ou solicitação"
                     minHeight="250px"
                     disabled={isSubmitting}
+                    className={hasError("description") ? "border-destructive" : ""}
                   />
+                  {hasError("description") && (
+                    <p className="text-xs text-destructive">{getErrorMessage("description")}</p>
+                  )}
                 </div>
-                {/* Substitua o input de arquivo existente por: */}
                 <div className="space-y-2">
                   <Label htmlFor="attachment">Anexos (opcional)</Label>
                   <FileInput
@@ -351,7 +443,7 @@ export default function AdminNewTicketPage() {
                     disabled={isSubmitting}
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
                     multiple
-                    selectedFiles={files} // Passando a lista de arquivos selecionados
+                    selectedFiles={files}
                   />
                   {files.length > 0 && (
                     <div className="mt-2">

@@ -6,12 +6,40 @@
 export class GLPIError extends Error {
 	status: number;
 	endpoint: string;
+	errorType: "auth" | "network" | "validation" | "server" | "unknown";
 
 	constructor(message: string, status: number, endpoint: string) {
 		super(message);
 		this.name = "GLPIError";
 		this.status = status;
 		this.endpoint = endpoint;
+
+		// Determinar o tipo de erro com base no status
+		if (status === 401 || status === 403) {
+			this.errorType = "auth";
+		} else if (status >= 400 && status < 500) {
+			this.errorType = "validation";
+		} else if (status >= 500) {
+			this.errorType = "server";
+		} else {
+			this.errorType = "unknown";
+		}
+	}
+
+	// Método para obter mensagem amigável ao usuário
+	getUserFriendlyMessage(): string {
+		switch (this.errorType) {
+			case "auth":
+				return "Erro de autenticação. Por favor, faça login novamente.";
+			case "validation":
+				return "Os dados fornecidos são inválidos. Verifique e tente novamente.";
+			case "server":
+				return "Erro no servidor. Por favor, tente novamente mais tarde.";
+			case "network":
+				return "Erro de conexão. Verifique sua internet e tente novamente.";
+			default:
+				return "Ocorreu um erro inesperado. Por favor, tente novamente.";
+		}
 	}
 }
 
@@ -22,6 +50,10 @@ const GLPI_API_URL =
 const GLPI_APP_TOKEN = process.env.GLPI_APP_TOKEN || "";
 const GLPI_USER_TOKEN = process.env.GLPI_USER_TOKEN || "";
 
+// Constantes para a gestão de sessão
+const SESSION_TOKEN_EXPIRY = 3600000; // 1 hora em milissegundos
+const TOKEN_RENEWAL_THRESHOLD = 300000; // 5 minutos em milissegundos
+
 // Interface para o token de sessão
 interface SessionToken {
 	sessionToken: string;
@@ -30,13 +62,27 @@ interface SessionToken {
 
 // Cache para o token de sessão
 let sessionTokenCache: SessionToken | null = null;
+let renewalTimeout: NodeJS.Timeout | null = null;
+
+// Função para verificar se estamos em ambiente de servidor
+const isServer = typeof window === "undefined";
 
 /**
  * Inicializa uma sessão com o GLPI
  */
 export async function initSession(): Promise<string> {
 	// Se já temos um token válido em cache, retorna ele
+	if (
+		sessionTokenCache &&
+		sessionTokenCache.expiresAt > Date.now() + TOKEN_RENEWAL_THRESHOLD
+	) {
+		return sessionTokenCache.sessionToken;
+	}
+
+	// Se o token está próximo de expirar, renova-o
 	if (sessionTokenCache && sessionTokenCache.expiresAt > Date.now()) {
+		// Agenda a renovação do token
+		scheduleTokenRenewal();
 		return sessionTokenCache.sessionToken;
 	}
 
@@ -46,8 +92,12 @@ export async function initSession(): Promise<string> {
 			const mockToken = `dev-session-token-${Date.now()}`;
 			sessionTokenCache = {
 				sessionToken: mockToken,
-				expiresAt: Date.now() + 3600000, // 1 hora
+				expiresAt: Date.now() + SESSION_TOKEN_EXPIRY,
 			};
+
+			// Agenda a renovação do token
+			scheduleTokenRenewal();
+
 			return mockToken;
 		}
 
@@ -66,11 +116,14 @@ export async function initSession(): Promise<string> {
 
 		const data = await response.json();
 
-		// Armazena o token em cache (válido por 1 hora)
+		// Armazena o token em cache
 		sessionTokenCache = {
 			sessionToken: data.session_token,
-			expiresAt: Date.now() + 3600000, // 1 hora
+			expiresAt: Date.now() + SESSION_TOKEN_EXPIRY,
 		};
+
+		// Agenda a renovação do token
+		scheduleTokenRenewal();
 
 		return data.session_token;
 	} catch (error) {
@@ -81,7 +134,7 @@ export async function initSession(): Promise<string> {
 			const mockToken = `dev-session-token-${Date.now()}`;
 			sessionTokenCache = {
 				sessionToken: mockToken,
-				expiresAt: Date.now() + 3600000, // 1 hora
+				expiresAt: Date.now() + SESSION_TOKEN_EXPIRY,
 			};
 			return mockToken;
 		}
@@ -91,10 +144,103 @@ export async function initSession(): Promise<string> {
 }
 
 /**
+ * Agenda a renovação do token antes que ele expire
+ */
+function scheduleTokenRenewal() {
+	// Só executa no servidor
+	if (!isServer) return;
+
+	// Limpa qualquer timeout existente
+	if (renewalTimeout) {
+		clearTimeout(renewalTimeout);
+	}
+
+	// Se não há token em cache, não faz nada
+	if (!sessionTokenCache) {
+		return;
+	}
+
+	// Calcula o tempo até a renovação (5 minutos antes de expirar)
+	const timeUntilRenewal =
+		sessionTokenCache.expiresAt - Date.now() - TOKEN_RENEWAL_THRESHOLD;
+
+	// Se já passou do tempo de renovação, renova imediatamente
+	if (timeUntilRenewal <= 0) {
+		renewToken();
+		return;
+	}
+
+	// Agenda a renovação
+	renewalTimeout = setTimeout(() => {
+		renewToken();
+	}, timeUntilRenewal);
+}
+
+/**
+ * Renova o token de sessão
+ */
+async function renewToken() {
+	try {
+		// Em ambiente de desenvolvimento, simular renovação
+		if (process.env.NODE_ENV === "development") {
+			console.log("Renovando token de sessão (simulado)");
+			if (sessionTokenCache) {
+				sessionTokenCache.expiresAt = Date.now() + SESSION_TOKEN_EXPIRY;
+				scheduleTokenRenewal();
+			}
+			return;
+		}
+
+		// Se não há token em cache, inicia uma nova sessão
+		if (!sessionTokenCache) {
+			await initSession();
+			return;
+		}
+
+		console.log("Renovando token de sessão");
+
+		// Faz a requisição para renovar o token
+		const response = await fetch(`${GLPI_API_URL}/session`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				"Session-Token": sessionTokenCache.sessionToken,
+				"App-Token": GLPI_APP_TOKEN,
+			},
+		});
+
+		if (!response.ok) {
+			// Se falhar, inicia uma nova sessão
+			console.warn("Falha ao renovar token, iniciando nova sessão");
+			sessionTokenCache = null;
+			await initSession();
+			return;
+		}
+
+		// Atualiza o tempo de expiração
+		if (sessionTokenCache) {
+			sessionTokenCache.expiresAt = Date.now() + SESSION_TOKEN_EXPIRY;
+			scheduleTokenRenewal();
+		}
+	} catch (error) {
+		console.error("Erro ao renovar token:", error);
+		// Em caso de erro, tenta iniciar uma nova sessão
+		sessionTokenCache = null;
+		await initSession();
+	}
+}
+
+/**
  * Encerra uma sessão com o GLPI
  */
 export async function killSession(sessionToken: string): Promise<void> {
 	try {
+		// Limpar o timeout de renovação
+		if (renewalTimeout) {
+			clearTimeout(renewalTimeout);
+			renewalTimeout = null;
+		}
+
 		// Em ambiente de desenvolvimento, apenas limpar o cache
 		if (process.env.NODE_ENV === "development") {
 			sessionTokenCache = null;
@@ -117,7 +263,73 @@ export async function killSession(sessionToken: string): Promise<void> {
 	}
 }
 
-// Modifique a função fetchGLPI para usar o novo tratamento de erros
+/**
+ * Função para fazer requisições com retry
+ */
+async function fetchWithRetry<T>(
+	url: string,
+	options: RequestInit = {},
+	maxRetries = 3,
+): Promise<T> {
+	let retries = 0;
+
+	while (retries < maxRetries) {
+		try {
+			const response = await fetch(url, options);
+
+			if (!response.ok) {
+				// Se for um erro 5xx, tenta novamente
+				if (response.status >= 500) {
+					retries++;
+					// Espera exponencial antes de tentar novamente
+					await new Promise((resolve) =>
+						// biome-ignore lint/style/useExponentiationOperator: <explanation>
+						setTimeout(resolve, 1000 * Math.pow(2, retries)),
+					);
+					continue;
+				}
+
+				// Para outros erros, lança exceção
+				let errorDetails = "";
+				try {
+					const errorData = await response.json();
+					errorDetails = errorData.message || JSON.stringify(errorData);
+				} catch {
+					errorDetails = response.statusText;
+				}
+
+				throw new GLPIError(
+					`Erro na requisição: ${errorDetails}`,
+					response.status,
+					url,
+				);
+			}
+
+			return await response.json();
+		} catch (error) {
+			// Se for o último retry ou não for um erro de rede, lança a exceção
+			if (retries >= maxRetries - 1 || !(error instanceof TypeError)) {
+				if (error instanceof TypeError) {
+					// Erro de rede
+					throw new GLPIError("Erro de conexão com o servidor", 0, url);
+				}
+				throw error;
+			}
+
+			retries++;
+			// Espera exponencial antes de tentar novamente
+			await new Promise((resolve) =>
+				// biome-ignore lint/style/useExponentiationOperator: <explanation>
+				setTimeout(resolve, 1000 * Math.pow(2, retries)),
+			);
+		}
+	}
+
+	// Nunca deve chegar aqui, mas TypeScript exige um retorno
+	throw new Error("Número máximo de tentativas excedido");
+}
+
+// Modifique a função fetchGLPI para usar o novo tratamento de erros e retries
 export async function fetchGLPI<T>(
 	endpoint: string,
 	options: RequestInit = {},
@@ -129,8 +341,9 @@ export async function fetchGLPI<T>(
 		}
 
 		const sessionToken = await initSession();
+		const fullUrl = `${GLPI_API_URL}/${endpoint}`;
 
-		const response = await fetch(`${GLPI_API_URL}/${endpoint}`, {
+		return await fetchWithRetry<T>(fullUrl, {
 			...options,
 			headers: {
 				"Content-Type": "application/json",
@@ -139,25 +352,6 @@ export async function fetchGLPI<T>(
 				...options.headers,
 			},
 		});
-
-		if (!response.ok) {
-			// Tentar obter detalhes do erro da resposta
-			let errorDetails = "";
-			try {
-				const errorData = await response.json();
-				errorDetails = errorData.message || JSON.stringify(errorData);
-			} catch {
-				errorDetails = response.statusText;
-			}
-
-			throw new GLPIError(
-				`Erro na requisição: ${errorDetails}`,
-				response.status,
-				endpoint,
-			);
-		}
-
-		return await response.json();
 	} catch (error) {
 		if (error instanceof GLPIError) {
 			console.error(
@@ -563,8 +757,10 @@ export async function uploadDocument(
 	});
 
 	if (!response.ok) {
-		throw new Error(
+		throw new GLPIError(
 			`Erro ao fazer upload do documento: ${response.statusText}`,
+			response.status,
+			"Document",
 		);
 	}
 

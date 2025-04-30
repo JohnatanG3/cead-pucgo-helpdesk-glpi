@@ -1,36 +1,137 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema de Chamados CEAD PUC-GO
 
-## Getting Started
+Este é um sistema de gerenciamento de chamados desenvolvido para o CEAD (Coordenação de Educação a Distância) da PUC-GO, utilizando Next.js, TypeScript e integração com a API do GLPI.
 
-First, run the development server:
+## Funcionalidades
 
-```bash
+- Autenticação de usuários
+- Abertura de chamados
+- Atribuição de chamados a técnicos ou grupos
+- Acompanhamento de status
+- Upload de anexos
+- Comentários em chamados
+- Painel administrativo
+
+## Requisitos
+
+- Node.js 18.x ou superior
+- npm ou yarn
+- Acesso a uma instância do GLPI
+
+## Variáveis de Ambiente
+
+Crie um arquivo `.env.local` na raiz do projeto com as seguintes variáveis:
+
+\`\`\`
+# URL da API do GLPI
+NEXT_PUBLIC_GLPI_API_URL=http://seu-servidor-glpi/apirest.php
+
+# Tokens de autenticação do GLPI
+GLPI_APP_TOKEN=seu-app-token
+GLPI_USER_TOKEN=seu-user-token
+
+# Configuração do Redis (opcional, apenas para produção)
+REDIS_URL=redis://usuario:senha@seu-servidor-redis:6379
+\`\`\`
+
+## Instalação
+
+1. Clone o repositório:
+\`\`\`bash
+git clone https://github.com/seu-usuario/cead-ticket-system.git
+cd cead-ticket-system
+\`\`\`
+
+2. Instale as dependências:
+\`\`\`bash
+npm install
+# ou
+yarn
+\`\`\`
+
+3. Execute o servidor de desenvolvimento:
+\`\`\`bash
 npm run dev
-# or
+# ou
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+\`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Acesse `http://localhost:3000` no seu navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estrutura do Projeto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `/app` - Rotas e páginas da aplicação (Next.js App Router)
+- `/components` - Componentes React reutilizáveis
+- `/lib` - Funções utilitárias e serviços
+- `/contexts` - Contextos React para gerenciamento de estado
+- `/types` - Definições de tipos TypeScript
 
-## Learn More
+## Integração com o GLPI
 
-To learn more about Next.js, take a look at the following resources:
+O sistema se comunica com o GLPI através de sua API REST. As principais funcionalidades implementadas são:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Autenticação via token
+- Listagem e criação de chamados
+- Upload de documentos
+- Gerenciamento de categorias
+- Atribuição de chamados a técnicos e grupos
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Configuração do GLPI
 
-## Deploy on Vercel
+1. No GLPI, acesse Configuração > Geral > API
+2. Habilite a API REST
+3. Crie um App Token para a aplicação
+4. Crie um User Token para o usuário que será usado para autenticação
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Desenvolvimento
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Ambiente de Desenvolvimento
+
+Em ambiente de desenvolvimento, o sistema utiliza dados simulados (mock data) para facilitar o desenvolvimento sem necessidade de uma instância real do GLPI.
+
+Para usar dados reais durante o desenvolvimento, configure as variáveis de ambiente e altere a condição no arquivo `lib/glpi-api.ts`:
+
+\`\`\`typescript
+// Altere esta linha
+if (process.env.NODE_ENV === "development") {
+  // Para
+if (process.env.USE_MOCK_DATA === "true") {
+\`\`\`
+
+### Validação de Dados
+
+O sistema utiliza a biblioteca Zod para validação de dados nos formulários. Os schemas de validação estão definidos em `lib/validation.ts`.
+
+### Gestão de Sessões
+
+O sistema implementa um mecanismo de cache para tokens de sessão do GLPI, com renovação automática antes da expiração. Em produção, é possível utilizar Redis para armazenamento persistente dos tokens.
+
+## Produção
+
+Para build de produção:
+
+\`\`\`bash
+npm run build
+# ou
+yarn build
+\`\`\`
+
+Para executar em produção:
+
+\`\`\`bash
+npm start
+# ou
+yarn start
+\`\`\`
+
+### Configuração para Produção
+
+Em ambiente de produção, recomenda-se:
+
+1. Configurar um servidor Redis para armazenamento de tokens de sessão
+2. Utilizar um serviço como Vercel, Netlify ou servidor próprio com PM2
+3. Configurar HTTPS para segurança das comunicações
+
+## Licença
+
+Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
