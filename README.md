@@ -11,6 +11,8 @@ Este é um sistema de gerenciamento de chamados desenvolvido para o CEAD (Coorde
 - Upload de anexos
 - Comentários em chamados
 - Painel administrativo
+- Sistema de notificações
+- Interface responsiva para dispositivos móveis
 
 ## Requisitos
 
@@ -32,14 +34,17 @@ GLPI_USER_TOKEN=seu-user-token
 
 # Configuração do Redis (opcional, apenas para produção)
 REDIS_URL=redis://usuario:senha@seu-servidor-redis:6379
+
+# Usar dados simulados para desenvolvimento
+USE_MOCK_DATA=true
 \`\`\`
 
 ## Instalação
 
 1. Clone o repositório:
 \`\`\`bash
-git clone https://github.com/seu-usuario/cead-ticket-system.git
-cd cead-ticket-system
+git clone https://github.com/JohnatanG3/cead-pucgo-helpdesk-glpi.git
+cd cead-pucgo-helpdesk-glpi
 \`\`\`
 
 2. Instale as dependências:
@@ -65,6 +70,7 @@ yarn dev
 - `/lib` - Funções utilitárias e serviços
 - `/contexts` - Contextos React para gerenciamento de estado
 - `/types` - Definições de tipos TypeScript
+- `/public` - Arquivos estáticos (imagens, favicon, etc.)
 
 ## Integração com o GLPI
 
@@ -89,14 +95,7 @@ O sistema se comunica com o GLPI através de sua API REST. As principais funcion
 
 Em ambiente de desenvolvimento, o sistema utiliza dados simulados (mock data) para facilitar o desenvolvimento sem necessidade de uma instância real do GLPI.
 
-Para usar dados reais durante o desenvolvimento, configure as variáveis de ambiente e altere a condição no arquivo `lib/glpi-api.ts`:
-
-\`\`\`typescript
-// Altere esta linha
-if (process.env.NODE_ENV === "development") {
-  // Para
-if (process.env.USE_MOCK_DATA === "true") {
-\`\`\`
+Para usar dados reais durante o desenvolvimento, configure as variáveis de ambiente e altere a variável de ambiente `USE_MOCK_DATA` para "false".
 
 ### Validação de Dados
 
@@ -105,6 +104,10 @@ O sistema utiliza a biblioteca Zod para validação de dados nos formulários. O
 ### Gestão de Sessões
 
 O sistema implementa um mecanismo de cache para tokens de sessão do GLPI, com renovação automática antes da expiração. Em produção, é possível utilizar Redis para armazenamento persistente dos tokens.
+
+### Sistema de Notificações
+
+O sistema inclui um serviço de notificações que permite alertar os usuários sobre atualizações em seus chamados. As notificações são exibidas em tempo real através de um componente de sino de notificações.
 
 ## Produção
 
@@ -131,6 +134,15 @@ Em ambiente de produção, recomenda-se:
 1. Configurar um servidor Redis para armazenamento de tokens de sessão
 2. Utilizar um serviço como Vercel, Netlify ou servidor próprio com PM2
 3. Configurar HTTPS para segurança das comunicações
+4. Definir a variável `USE_MOCK_DATA` como "false"
+
+## Recursos Adicionais
+
+- Interface de administração para gerenciamento de chamados
+- Painel de estatísticas para acompanhamento de métricas
+- Editor de texto rico para descrições e respostas
+- Upload de múltiplos arquivos
+- Filtros avançados para busca de chamados
 
 ## Licença
 
