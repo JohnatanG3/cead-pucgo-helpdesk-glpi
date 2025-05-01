@@ -3,20 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ChevronDown, Clock, FileText, MessageSquare, User } from "lucide-react"
+import { ArrowLeft, Clock, FileText, MessageSquare, User } from "lucide-react"
 import { toast } from "sonner"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FileInput } from "@/components/file-input"
@@ -30,11 +22,12 @@ import {
   linkDocumentToTicket,
 } from "@/lib/glpi-api"
 import { useAuth } from "@/contexts/auth-context"
+import { AdminHeader } from "@/components/admin/admin-header"
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [followups, setFollowups] = useState<any[]>([])
@@ -184,40 +177,7 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
-        <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-2">
-            {/* Logo usando o componente Image do Next.js */}
-            <img src="/puc-goias.svg" alt="Logo PUC Goiás" className="h-8 w-8" />
-            <span className="text-lg font-semibold">CEAD - PUC GO (Admin)</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>{user?.name?.charAt(0) || "A"}</AvatarFallback>
-                  </Avatar>
-                  <span className="hidden md:inline-flex">{user?.name || "Administrador"}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Perfil
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Meus Chamados
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
+      <AdminHeader />
 
       <main className="flex-1 p-4 md:p-6">
         <div className="container mx-auto max-w-4xl">
