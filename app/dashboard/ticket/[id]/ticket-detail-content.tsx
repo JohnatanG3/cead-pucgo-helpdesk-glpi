@@ -17,6 +17,7 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
+	CardDescription,
 } from "@/components/ui/card";
 import {
 	getTicket,
@@ -44,19 +45,13 @@ import { FileInput } from "@/components/file-input";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Label } from "@/components/ui/label";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 	DialogFooter,
 } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 
 // Interface para documentos
 interface Document {
@@ -68,6 +63,50 @@ interface Document {
 	date_creation: string;
 	users_id: number;
 }
+
+interface PriorityIndicatorProps {
+	priority: number;
+}
+
+const PriorityIndicator: React.FC<PriorityIndicatorProps> = ({ priority }) => {
+	const priorityString = mapGLPIPriorityToString(priority);
+
+	let color = "bg-gray-400"; // Cor padrão
+
+	switch (priorityString) {
+		case "low":
+			color = "bg-green-500";
+			break;
+		case "medium":
+			color = "bg-yellow-500";
+			break;
+		case "high":
+			color = "bg-orange-500";
+			break;
+		case "urgent":
+			color = "bg-red-500";
+			break;
+		default:
+			color = "bg-gray-400";
+	}
+
+	return (
+		<div className="flex items-center">
+			<span className={`h-2 w-2 rounded-full mr-1 ${color}`} />
+			<span>
+				{priorityString === "low"
+					? "Baixa"
+					: priorityString === "medium"
+						? "Média"
+						: priorityString === "high"
+							? "Alta"
+							: priorityString === "urgent"
+								? "Urgente"
+								: "Desconhecida"}
+			</span>
+		</div>
+	);
+};
 
 export default function TicketDetailContent({
 	ticketId,
@@ -622,80 +661,86 @@ export default function TicketDetailContent({
 					<Card>
 						<CardHeader>
 							<CardTitle>Adicionar Comentário</CardTitle>
+							<CardDescription>
+								Responda ao chamado e atualize seu status
+							</CardDescription>
 						</CardHeader>
 						<form onSubmit={handleSubmitComment}>
 							<CardContent className="space-y-4">
-								<div className="grid gap-4 md:grid-cols-2 mb-4">
+								{/* Controles de status e prioridade */}
+								<div className="grid gap-4 md:grid-cols-2">
 									<div>
-										<Label htmlFor="status">Status do Chamado</Label>
-										<Select
-											value={selectedStatus?.toString() || ""}
-											onValueChange={(value) =>
-												setSelectedStatus(Number(value))
-											}
-										>
-											<SelectTrigger>
-												<SelectValue placeholder="Selecione o status" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="1">Novo</SelectItem>
-												<SelectItem value="2">Pendente</SelectItem>
-												<SelectItem value="3">Em andamento</SelectItem>
-												<SelectItem value="4">Resolvido</SelectItem>
-												<SelectItem value="5">Fechado</SelectItem>
-											</SelectContent>
-										</Select>
+										<h3 className="text-sm font-medium">Status</h3>
+										<div className="mt-1">
+											<select
+												value={selectedStatus?.toString() || ""}
+												onChange={(e) =>
+													setSelectedStatus(Number(e.target.value))
+												}
+												className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+											>
+												<option value="1">Novo</option>
+												<option value="2">Pendente</option>
+												<option value="3">Em andamento</option>
+												<option value="4">Resolvido</option>
+												<option value="5">Fechado</option>
+											</select>
+										</div>
+										<p className="mt-1 text-xs text-muted-foreground">
+											Status atual:{" "}
+											{mapGLPIStatusToString(ticket.status) === "new"
+												? "Novo"
+												: mapGLPIStatusToString(ticket.status) === "pending"
+													? "Pendente"
+													: mapGLPIStatusToString(ticket.status) ===
+															"in_progress"
+														? "Em andamento"
+														: mapGLPIStatusToString(ticket.status) ===
+																"resolved"
+															? "Resolvido"
+															: mapGLPIStatusToString(ticket.status) ===
+																	"closed"
+																? "Fechado"
+																: "Desconhecido"}
+										</p>
 									</div>
 									<div>
-										<Label htmlFor="priority">Prioridade</Label>
-										<Select
-											value={selectedPriority?.toString() || ""}
-											onValueChange={(value) =>
-												setSelectedPriority(Number(value))
-											}
-										>
-											<SelectTrigger>
-												<SelectValue placeholder="Selecione a prioridade" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="1">
-													<div className="flex items-center">
-														<span className="priority-indicator priority-low" />
-														<span>Baixa</span>
-													</div>
-												</SelectItem>
-												<SelectItem value="2">
-													<div className="flex items-center">
-														<span className="priority-indicator priority-medium" />
-														<span>Média</span>
-													</div>
-												</SelectItem>
-												<SelectItem value="3">
-													<div className="flex items-center">
-														<span className="priority-indicator priority-high" />
-														<span>Alta</span>
-													</div>
-												</SelectItem>
-												<SelectItem value="4">
-													<div className="flex items-center">
-														<span className="priority-indicator priority-urgent" />
-														<span>Urgente</span>
-													</div>
-												</SelectItem>
-											</SelectContent>
-										</Select>
+										<h3 className="text-sm font-medium">Prioridade</h3>
+										<div className="mt-1">
+											<select
+												value={selectedPriority?.toString() || ""}
+												onChange={(e) =>
+													setSelectedPriority(Number(e.target.value))
+												}
+												className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+											>
+												<option value="1">Muito baixa</option>
+												<option value="2">Baixa</option>
+												<option value="3">Média</option>
+												<option value="4">Alta</option>
+												<option value="5">Muito alta</option>
+											</select>
+										</div>
+										<div className="mt-1 text-xs text-muted-foreground">
+											Prioridade atual:{" "}
+											<PriorityIndicator priority={ticket.priority} />
+										</div>
 									</div>
 								</div>
-								<RichTextEditor
-									id="comment"
-									name="comment"
-									value={newComment}
-									onChange={setNewComment}
-									placeholder="Digite seu comentário ou dúvida adicional..."
-									minHeight="200px"
-									disabled={isSubmitting}
-								/>
-								{/* Substitua o input de arquivo existente por: */}
+
+								<Separator className="my-2" />
+
+								<div>
+									<RichTextEditor
+										id="comment"
+										name="comment"
+										value={newComment}
+										onChange={setNewComment}
+										placeholder="Digite seu comentário ou dúvida adicional..."
+										minHeight="200px"
+										disabled={isSubmitting}
+									/>
+								</div>
 								<div className="space-y-2">
 									<FileInput
 										id="attachment"

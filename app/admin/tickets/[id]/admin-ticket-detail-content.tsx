@@ -41,7 +41,6 @@ import {
 	deleteDocument,
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
-import { AdminHeader } from "@/components/admin/admin-header";
 import {
 	Dialog,
 	DialogContent,
@@ -344,7 +343,6 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 
 	return (
 		<div className="flex min-h-screen flex-col">
-			<AdminHeader />
 
 			<main className="flex-1 p-4 md:p-6">
 				<div className="container mx-auto max-w-4xl">

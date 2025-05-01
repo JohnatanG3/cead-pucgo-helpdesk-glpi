@@ -351,27 +351,27 @@ export default function AdminDashboard() {
 					{/* Botões de ação responsivos */}
 					<div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:flex md:flex-wrap md:gap-2">
 						<Link href="/admin/categories" className="w-full sm:w-auto">
-							<Button variant="default" className="w-full">
+							<Button variant="default" className="w-full whitespace-nowrap">
 								<Layers className="mr-2 h-4 w-4" />
-								<span className="hidden sm:inline">Gerenciar</span> Categorias
+								{"Gerenciar Categorias"}
 							</Button>
 						</Link>
 						<Link href="/admin/new-ticket" className="w-full sm:w-auto">
-							<Button variant="default" className="w-full">
+							<Button variant="default" className="w-full whitespace-nowrap">
 								<Plus className="mr-2 h-4 w-4" />
-								<span className="hidden sm:inline">Abrir</span> Chamado
+								{"Abrir Chamado"}
 							</Button>
 						</Link>
 						<Link href="/admin/reports" className="w-full sm:w-auto">
-							<Button variant="default" className="w-full">
+							<Button variant="default" className="w-full whitespace-nowrap">
 								<BarChart3 className="mr-2 h-4 w-4" />
-								Relatórios
+								{"Relatórios"}
 							</Button>
 						</Link>
 						<Link href="/admin/tickets" className="w-full sm:w-auto">
-							<Button variant="default" className="w-full">
+							<Button variant="default" className="w-full whitespace-nowrap">
 								<FileText className="mr-2 h-4 w-4" />
-								<span className="hidden sm:inline">Ver</span> Chamados
+								{"Ver Chamados"}
 							</Button>
 						</Link>
 					</div>
