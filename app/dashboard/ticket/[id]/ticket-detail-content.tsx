@@ -37,7 +37,7 @@ import {
 	deleteDocument,
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
-import { getInitials } from "@/lib/utils";
+import { getEmailInitial } from "@/lib/utils";
 
 // Importe o novo componente
 import { FileInput } from "@/components/file-input";
@@ -588,8 +588,8 @@ export default function TicketDetailContent({
 													alt={followup.user?.name || "Usuário"}
 												/>
 												<AvatarFallback>
-													{followup.user?.name
-														? getInitials(followup.user.name)
+													{followup.user?.email
+														? getEmailInitial(followup.user.email)
 														: "U"}
 												</AvatarFallback>
 											</Avatar>

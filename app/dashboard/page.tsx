@@ -361,13 +361,18 @@ export default function DashboardPage() {
 		);
 	}
 
+	// Função para obter a inicial do email
+	const getEmailInitial = (email: string) => {
+		return email?.charAt(0).toUpperCase() || "U";
+	};
+
 	// Renderiza o conteúdo real quando estiver carregado
 	return (
 		<div className="flex min-h-screen flex-col">
 			<header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
 				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
 					<div className="flex items-center gap-2">
-						<img src="/puc-goias.svg" alt="Logo CEAD PUC GO" className="h-8 w-8" />
+						<img src="/logo.png" alt="Logo CEAD PUC GO" className="h-8 w-8" />
 						<span className="text-lg font-semibold">CEAD - PUC GO</span>
 					</div>
 					<div className="flex items-center gap-4">
@@ -381,7 +386,7 @@ export default function DashboardPage() {
 									<Avatar className="h-8 w-8">
 										<AvatarImage src="/diverse-avatars.png" alt="Avatar" />
 										<AvatarFallback>
-											{user?.name?.charAt(0) || "U"}
+											{user?.email ? getEmailInitial(user.email) : "U"}
 										</AvatarFallback>
 									</Avatar>
 									<span className="hidden md:inline-flex">
@@ -840,7 +845,7 @@ export default function DashboardPage() {
 									<ul className="mt-1 space-y-1 text-sm text-muted-foreground">
 										<li>
 											<a
-												href="/manual-do-coordenador"
+												href="/manual-do-coorndenador"
 												className="text-primary hover:underline"
 											>
 												Manual do Coordenador
@@ -848,7 +853,7 @@ export default function DashboardPage() {
 										</li>
 										<li>
 											<a
-												href="/tutoriais.da-plataforma"
+												href="tutoriais-da-plataforma"
 												className="text-primary hover:underline"
 											>
 												Tutoriais da Plataforma

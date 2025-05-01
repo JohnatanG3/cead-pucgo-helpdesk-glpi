@@ -52,7 +52,7 @@ import {
 	DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { getInitials } from "@/lib/utils";
+import { getEmailInitial } from "@/lib/utils";
 
 // Interface para documentos
 interface Document {
@@ -514,11 +514,11 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 																<AvatarFallback>
 																	{followup.users_id ===
 																	ticket.users_id_recipient
-																		? getInitials(
-																				followup.user?.name || "Usuário",
+																		? getEmailInitial(
+																				followup.user?.email || "Usuário",
 																			)
-																		: getInitials(
-																				followup.user?.name || "Atendente",
+																		: getEmailInitial(
+																				followup.user?.email || "Atendente",
 																			)}
 																</AvatarFallback>
 															</Avatar>

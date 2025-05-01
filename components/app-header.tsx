@@ -16,20 +16,29 @@ import {
 import { useAuth } from "@/contexts/auth-context"
 import { getEmailInitial } from "@/lib/utils"
 
-export function UserHeader() {
+interface AppHeaderProps {
+  isAdmin?: boolean
+}
+
+export function AppHeader({ isAdmin = false }: AppHeaderProps) {
   const { user, logout } = useAuth()
 
-  // Usar o email para o avatar, ou fallback para 'U' (Usuário)
-  const avatarInitial = user?.email ? getEmailInitial(user.email) : "U"
+  // Usar o email para o avatar, ou fallback para 'A' (Admin) ou 'U' (Usuário)
+  const avatarInitial = user?.email ? getEmailInitial(user.email) : isAdmin ? "A" : "U"
+
+  // Determinar o link e o texto do cabeçalho com base no tipo de usuário
+  const headerLink = isAdmin ? "/admin" : "/dashboard"
+  const headerText = isAdmin ? "CEAD - PUC GO (Admin)" : "CEAD - PUC GO"
+  const defaultName = isAdmin ? "Administrador" : "Usuário"
 
   return (
     <header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <Link href="/dashboard">
+          <Link href={headerLink}>
             <div className="flex items-center gap-2">
               <img src="/puc-goias.svg" alt="Logo PUC Goiás" className="h-8 w-8" />
-              <span className="text-lg font-semibold">CEAD - PUC GO</span>
+              <span className="text-lg font-semibold">{headerText}</span>
             </div>
           </Link>
         </div>
@@ -40,7 +49,7 @@ export function UserHeader() {
                 <Avatar className="h-8 w-8">
                   <AvatarFallback>{avatarInitial}</AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline-flex">{user?.name || "Usuário"}</span>
+                <span className="hidden md:inline-flex">{user?.name || defaultName}</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
