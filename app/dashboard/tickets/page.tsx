@@ -125,7 +125,7 @@ export default function TicketsPage() {
       <header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-2">
-            <img src="/placeholder.svg?height=32&width=32" alt="Logo CEAD PUC GO" className="h-8 w-8" />
+            <img src="/puc-goias.svg" alt="Logo CEAD PUC GO" className="h-8 w-8" />
             <span className="text-lg font-semibold">CEAD - PUC GO</span>
           </div>
           <div className="flex items-center gap-4">

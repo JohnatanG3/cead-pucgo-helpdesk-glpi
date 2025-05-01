@@ -215,7 +215,7 @@ export default function ReportsPage() {
 				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
 					<div className="flex items-center gap-2">
 						<img
-							src="/placeholder.svg?height=32&width=32"
+							src="/puc-goias.svg"
 							alt="Logo CEAD PUC GO"
 							className="h-8 w-8"
 						/>

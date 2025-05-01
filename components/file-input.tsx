@@ -1,97 +1,82 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Upload } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import type { ChangeEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Paperclip, X } from "lucide-react";
 
-interface FileInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> {
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
-  buttonText?: string
-  noFileText?: string
-  className?: string
-  buttonClassName?: string
-  // Adicionando uma prop para receber os arquivos selecionados externamente
-  selectedFiles?: File[]
+export interface FileInputProps {
+	id: string;
+	onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+	disabled?: boolean;
+	accept?: string;
+	multiple?: boolean;
+	buttonText?: string;
+	selectedFiles?: File[];
+	onRemove?: (index: number) => void;
 }
 
 export function FileInput({
-  onChange,
-  buttonText = "Selecionar arquivo",
-  noFileText = "Nenhum arquivo selecionado",
-  className,
-  buttonClassName,
-  multiple,
-  accept,
-  disabled,
-  selectedFiles,
-  ...props
+	id,
+	onChange,
+	disabled = false,
+	accept,
+	multiple = false,
+	buttonText = "Selecionar arquivo",
+	selectedFiles = [],
+	onRemove,
 }: FileInputProps) {
-  const [fileNames, setFileNames] = useState<string>("")
-  const inputRef = useRef<HTMLInputElement>(null)
+	return (
+		<div className="space-y-2">
+			<div className="flex items-center gap-2">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					onClick={() => document.getElementById(id)?.click()}
+					disabled={disabled}
+				>
+					<Paperclip className="mr-2 h-4 w-4" />
+					{buttonText}
+				</Button>
+				<input
+					type="file"
+					id={id}
+					onChange={onChange}
+					disabled={disabled}
+					accept={accept}
+					multiple={multiple}
+					className="hidden"
+				/>
+			</div>
 
-  // Efeito para atualizar o texto quando os arquivos selecionados mudam externamente
-  useEffect(() => {
-    if (selectedFiles && selectedFiles.length > 0) {
-      const names = selectedFiles.map((file) => file.name).join(", ")
-      setFileNames(names)
-    } else {
-      setFileNames("")
-    }
-  }, [selectedFiles])
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      // Atualizar o texto exibido com os nomes dos arquivos
-      const names = Array.from(e.target.files)
-        .map((file) => file.name)
-        .join(", ")
-      setFileNames(names)
-    } else {
-      setFileNames("")
-    }
-
-    // Chamar o onChange passado como prop
-    if (onChange) {
-      onChange(e)
-    }
-  }
-
-  const handleButtonClick = () => {
-    inputRef.current?.click()
-  }
-
-  return (
-    <div className={cn("flex flex-col space-y-2", className)}>
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          onClick={handleButtonClick}
-          className={cn(
-            "bg-cead-blue text-white hover:bg-cead-light-blue",
-            disabled && "opacity-50 cursor-not-allowed",
-            buttonClassName,
-          )}
-          disabled={disabled}
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          {buttonText}
-        </Button>
-        <div className="flex-1 text-center text-sm text-muted-foreground border rounded-md p-2 truncate">
-          {fileNames || noFileText}
-        </div>
-      </div>
-      <input
-        type="file"
-        ref={inputRef}
-        onChange={handleChange}
-        className="hidden"
-        multiple={multiple}
-        accept={accept}
-        disabled={disabled}
-        {...props}
-      />
-    </div>
-  )
+			{selectedFiles.length > 0 && (
+				<div className="space-y-2 mt-2">
+					{selectedFiles.map((file, index) => (
+						<div
+							// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+							key={index}
+							className="flex items-center justify-between p-2 border rounded-md"
+						>
+							<div className="flex items-center gap-2 overflow-hidden">
+								<Paperclip className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+								<span className="text-sm truncate">{file.name}</span>
+							</div>
+							{onRemove && (
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="h-8 w-8 p-0"
+									onClick={() => onRemove(index)}
+								>
+									<span className="sr-only">Remover</span>
+									<X className="h-4 w-4" />
+								</Button>
+							)}
+						</div>
+					))}
+				</div>
+			)}
+		</div>
+	);
 }

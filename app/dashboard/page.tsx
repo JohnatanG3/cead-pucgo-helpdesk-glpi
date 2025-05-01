@@ -55,10 +55,10 @@ import { useAuth } from "@/contexts/auth-context";
 import { PriorityIndicator } from "@/components/priority-indicator";
 import { FileAttachment } from "@/components/file-attachment";
 import { RichTextEditor } from "@/components/rich-text-editor";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FileInput } from "@/components/file-input";
 // Importar as funções de validação
 import { ticketSchema, validateData } from "@/lib/validation";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function DashboardPage() {
 	const { user, isLoading: authLoading, logout } = useAuth();
@@ -82,7 +82,7 @@ export default function DashboardPage() {
 	const [description, setDescription] = useState("");
 	const [files, setFiles] = useState<File[]>([]);
 	const [assignmentType, setAssignmentType] = useState<
-		"none" | "user" | "group"
+		"none" | "user" | "group" | "both"
 	>("none");
 	const [assignedUser, setAssignedUser] = useState("");
 	const [assignedGroup, setAssignedGroup] = useState("");
@@ -176,10 +176,16 @@ export default function DashboardPage() {
 			};
 
 			// Adicionar atribuição conforme selecionado
-			if (assignmentType === "user" && assignedUser) {
-				newTicket.users_id_assign = Number.parseInt(assignedUser);
-			} else if (assignmentType === "group" && assignedGroup) {
-				newTicket.groups_id_assign = Number.parseInt(assignedGroup);
+			if (assignmentType === "user" || assignmentType === "both") {
+				if (assignedUser) {
+					newTicket.users_id_assign = Number.parseInt(assignedUser);
+				}
+			}
+
+			if (assignmentType === "group" || assignmentType === "both") {
+				if (assignedGroup) {
+					newTicket.groups_id_assign = Number.parseInt(assignedGroup);
+				}
 			}
 
 			const result = await createTicket(newTicket);
@@ -447,6 +453,9 @@ export default function DashboardPage() {
 								<CardDescription>
 									Preencha o formulário para solicitar suporte.
 								</CardDescription>
+								<p className="text-xs text-muted-foreground mt-1">
+									Data de abertura: {new Date().toLocaleString("pt-BR")}
+								</p>
 							</CardHeader>
 							<form onSubmit={handleSubmitTicket}>
 								<CardContent className="space-y-4">
@@ -560,6 +569,17 @@ export default function DashboardPage() {
 										)}
 									</div>
 
+									<div className="space-y-2">
+										<Label>Solicitante</Label>
+										<div className="flex items-center gap-2 p-2 border rounded-md bg-muted/30">
+											<User className="h-4 w-4 text-muted-foreground" />
+											<span>{user?.name || "Usuário atual"}</span>
+										</div>
+										<p className="text-xs text-muted-foreground">
+											Chamado será aberto em seu nome
+										</p>
+									</div>
+
 									{/* Seção de atribuição do chamado */}
 									<div className="space-y-2">
 										<Label
@@ -569,140 +589,125 @@ export default function DashboardPage() {
 										>
 											Atribuir chamado
 										</Label>
-										<RadioGroup
-											value={assignmentType}
-											onValueChange={handleAssignmentTypeChange}
-											className={
-												hasError("assignmentType")
-													? "border-destructive rounded p-2"
-													: ""
-											}
-										>
-											<div className="flex items-center space-x-2">
-												<RadioGroupItem value="none" id="assignment-none">
+
+										<div className="space-y-4">
+											<div className="space-y-2">
+												<div className="flex items-center space-x-2">
+													<Checkbox
+														id="assign-user"
+														checked={
+															assignmentType === "user" ||
+															assignmentType === "both"
+														}
+														onCheckedChange={(checked) => {
+															if (checked) {
+																if (assignmentType === "group")
+																	setAssignmentType("both");
+																else setAssignmentType("user");
+															} else {
+																if (assignmentType === "both")
+																	setAssignmentType("group");
+																else setAssignmentType("none");
+															}
+														}}
+													/>
 													<Label
-														htmlFor="assignment-none"
-														className="ml-2 cursor-pointer"
-													>
-														Não atribuir (padrão)
-													</Label>
-												</RadioGroupItem>
-											</div>
-											<div className="flex items-center space-x-2">
-												<RadioGroupItem value="user" id="assignment-user">
-													<Label
-														htmlFor="assignment-user"
-														className="ml-2 cursor-pointer"
+														htmlFor="assign-user"
+														className="cursor-pointer"
 													>
 														Atribuir a um técnico
 													</Label>
-												</RadioGroupItem>
+												</div>
+
+												{(assignmentType === "user" ||
+													assignmentType === "both") && (
+													<Select
+														value={assignedUser}
+														onValueChange={setAssignedUser}
+														disabled={isSubmitting}
+													>
+														<SelectTrigger
+															className={
+																hasError("assignedUser")
+																	? "border-destructive"
+																	: ""
+															}
+														>
+															<SelectValue placeholder="Selecione um técnico" />
+														</SelectTrigger>
+														<SelectContent>
+															{technicians.map((tech) => (
+																<SelectItem
+																	key={tech.id}
+																	value={tech.id.toString()}
+																>
+																	{tech.name}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+												)}
 											</div>
-											<div className="flex items-center space-x-2">
-												<RadioGroupItem value="group" id="assignment-group">
+
+											<div className="space-y-2">
+												<div className="flex items-center space-x-2">
+													<Checkbox
+														id="assign-group"
+														checked={
+															assignmentType === "group" ||
+															assignmentType === "both"
+														}
+														onCheckedChange={(checked) => {
+															if (checked) {
+																if (assignmentType === "user")
+																	setAssignmentType("both");
+																else setAssignmentType("group");
+															} else {
+																if (assignmentType === "both")
+																	setAssignmentType("user");
+																else setAssignmentType("none");
+															}
+														}}
+													/>
 													<Label
-														htmlFor="assignment-group"
-														className="ml-2 cursor-pointer"
+														htmlFor="assign-group"
+														className="cursor-pointer"
 													>
 														Atribuir a um grupo
 													</Label>
-												</RadioGroupItem>
+												</div>
+
+												{(assignmentType === "group" ||
+													assignmentType === "both") && (
+													<Select
+														value={assignedGroup}
+														onValueChange={setAssignedGroup}
+														disabled={isSubmitting}
+													>
+														<SelectTrigger
+															className={
+																hasError("assignedGroup")
+																	? "border-destructive"
+																	: ""
+															}
+														>
+															<SelectValue placeholder="Selecione um grupo" />
+														</SelectTrigger>
+														<SelectContent>
+															{groups.map((group) => (
+																<SelectItem
+																	key={group.id}
+																	value={group.id.toString()}
+																>
+																	{group.name}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+												)}
 											</div>
-										</RadioGroup>
-										{hasError("assignmentType") && (
-											<p className="text-xs text-destructive">
-												{getErrorMessage("assignmentType")}
-											</p>
-										)}
+										</div>
 									</div>
-
-									{/* Mostrar seleção de técnico se "user" estiver selecionado */}
-									{assignmentType === "user" && (
-										<div className="space-y-2">
-											<Label
-												htmlFor="assigned-user"
-												className={
-													hasError("assignedUser") ? "text-destructive" : ""
-												}
-											>
-												Técnico responsável
-											</Label>
-											<Select
-												value={assignedUser}
-												onValueChange={setAssignedUser}
-												disabled={isSubmitting}
-												required={assignmentType === "user"}
-											>
-												<SelectTrigger
-													className={
-														hasError("assignedUser") ? "border-destructive" : ""
-													}
-												>
-													<SelectValue placeholder="Selecione um técnico" />
-												</SelectTrigger>
-												<SelectContent>
-													{technicians.map((tech) => (
-														<SelectItem
-															key={tech.id}
-															value={tech.id.toString()}
-														>
-															{tech.name}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-											{hasError("assignedUser") && (
-												<p className="text-xs text-destructive">
-													{getErrorMessage("assignedUser")}
-												</p>
-											)}
-										</div>
-									)}
-
-									{/* Mostrar seleção de grupo se "group" estiver selecionado */}
-									{assignmentType === "group" && (
-										<div className="space-y-2">
-											<Label
-												htmlFor="assigned-group"
-												className={
-													hasError("assignedGroup") ? "text-destructive" : ""
-												}
-											>
-												Grupo responsável
-											</Label>
-											<Select
-												value={assignedGroup}
-												onValueChange={setAssignedGroup}
-												disabled={isSubmitting}
-												required={assignmentType === "group"}
-											>
-												<SelectTrigger
-													className={
-														hasError("assignedGroup")
-															? "border-destructive"
-															: ""
-													}
-												>
-													<SelectValue placeholder="Selecione um grupo" />
-												</SelectTrigger>
-												<SelectContent>
-													{groups.map((group) => (
-														<SelectItem
-															key={group.id}
-															value={group.id.toString()}
-														>
-															{group.name}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-											{hasError("assignedGroup") && (
-												<p className="text-xs text-destructive">
-													{getErrorMessage("assignedGroup")}
-												</p>
-											)}
-										</div>
-									)}
 
 									<div className="space-y-2">
 										<Label
@@ -737,7 +742,7 @@ export default function DashboardPage() {
 											id="attachment"
 											onChange={handleFileChange}
 											disabled={isSubmitting}
-											accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
+											accept="*/*" // Aceita todos os tipos de arquivos
 											multiple
 											selectedFiles={files}
 										/>
@@ -749,8 +754,8 @@ export default function DashboardPage() {
 											/>
 										)}
 										<p className="text-xs text-muted-foreground">
-											Formatos aceitos: PDF, DOC, DOCX, JPG, PNG, XLS, XLSX
-											(máx. 5MB por arquivo)
+											Todos os tipos de arquivos são aceitos (máx. 5MB por
+											arquivo)
 										</p>
 									</div>
 								</CardContent>
