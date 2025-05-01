@@ -334,7 +334,7 @@ export default function AdminTicketsPage() {
 												</div>
 												<div className="flex gap-2 w-full sm:w-auto">
 													<Button
-														variant="outline"
+														variant="default"
 														size="sm"
 														asChild
 														className="flex-1 sm:flex-none"
@@ -400,7 +400,7 @@ export default function AdminTicketsPage() {
 											</div>
 											<div className="flex gap-2 w-full sm:w-auto">
 												<Button
-													variant="outline"
+													variant="default"
 													size="sm"
 													asChild
 													className="flex-1 sm:flex-none"
@@ -459,7 +459,7 @@ export default function AdminTicketsPage() {
 											</div>
 											<div className="flex gap-2 w-full sm:w-auto">
 												<Button
-													variant="outline"
+													variant="default"
 													size="sm"
 													asChild
 													className="flex-1 sm:flex-none"
@@ -517,7 +517,7 @@ export default function AdminTicketsPage() {
 											</div>
 											<div className="flex gap-2 w-full sm:w-auto">
 												<Button
-													variant="outline"
+													variant="default"
 													size="sm"
 													asChild
 													className="flex-1 sm:flex-none"

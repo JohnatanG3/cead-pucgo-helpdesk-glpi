@@ -289,13 +289,13 @@ export default function AdminDashboard() {
             <Link href="/admin/categories" className="w-full sm:w-auto">
               <Button variant="default" className="w-full">
                 <Layers className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Gerenciar</span> Categorias
+                Gerenciar&nbsp;Categorias
               </Button>
             </Link>
             <Link href="/admin/new-ticket" className="w-full sm:w-auto">
               <Button variant="default" className="w-full">
                 <Plus className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Abrir</span> Chamado
+                Abrir&nbsp;Chamado
               </Button>
             </Link>
             <Link href="/admin/reports" className="w-full sm:w-auto">
@@ -307,7 +307,7 @@ export default function AdminDashboard() {
             <Link href="/admin/tickets" className="w-full sm:w-auto">
               <Button variant="default" className="w-full">
                 <FileText className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Ver</span> Chamados
+                Ver&nbsp;Chamados
               </Button>
             </Link>
           </div>
@@ -353,7 +353,7 @@ export default function AdminDashboard() {
                         Filtrar
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[200px]">
+                    <DropdownMenuContent align="end" className="w-[200px] max-h-[300px] overflow-y-auto">
                       <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <div className="p-2">
