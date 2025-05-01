@@ -9,7 +9,6 @@ import {
 	ArrowLeft,
 	Clock,
 	FileText,
-	MessageSquare,
 	User,
 	Edit2,
 	Trash2,
@@ -29,7 +28,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileInput } from "@/components/file-input";
 import { PriorityIndicator } from "@/components/priority-indicator";
 import { RichTextEditor } from "@/components/rich-text-editor";
@@ -395,7 +393,122 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 							</CardHeader>
 							<CardContent>
 								<div className="space-y-4">
-									<div className="grid gap-4 md:grid-cols-3">
+									<div>
+										<h3 className="text-sm font-medium mb-2">Descrição</h3>
+										<div
+											className="rounded-md border border-input bg-muted/40 p-4 text-sm"
+											// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+											dangerouslySetInnerHTML={{ __html: ticket.content }}
+										/>
+
+										{/* Exibir anexos do ticket */}
+										{ticketDocuments.length > 0 && (
+											<div className="mt-4 pt-4 border-t">
+												<h3 className="text-sm font-medium mb-2">Anexos:</h3>
+												<div className="flex flex-wrap gap-2">
+													{ticketDocuments.map((doc) => (
+														<div
+															key={doc.id}
+															className="flex items-center gap-2 p-2 border rounded-md"
+														>
+															<Paperclip className="h-4 w-4 text-muted-foreground" />
+															<span className="text-sm">{doc.filename}</span>
+														</div>
+													))}
+												</div>
+											</div>
+										)}
+									</div>
+								</div>
+							</CardContent>
+						</Card>
+
+						{/* Histórico de respostas - Removido conforme solicitado */}
+						{followups.length > 0 && (
+							<Card>
+								<CardHeader>
+									<CardTitle>Respostas anteriores</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<div className="space-y-4">
+										{followups.map((followup) => (
+											<div key={followup.id} className="rounded-lg border p-4">
+												<div className="flex items-start justify-between mb-2">
+													<div className="flex items-center gap-2">
+														<Avatar className="h-8 w-8">
+															<AvatarFallback>
+																{followup.users_id === ticket.users_id_recipient
+																	? getEmailInitial(
+																			followup.user?.email || "Usuário",
+																		)
+																	: getEmailInitial(
+																			followup.user?.email || "Atendente",
+																		)}
+															</AvatarFallback>
+														</Avatar>
+														<div>
+															<p className="text-sm font-medium">
+																{followup.users_id === ticket.users_id_recipient
+																	? "Solicitante"
+																	: "Atendente"}
+															</p>
+															<p className="text-xs text-muted-foreground">
+																{formatDate(followup.date_creation)}
+															</p>
+														</div>
+													</div>
+													{followup.is_private ? (
+														<span className="rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800">
+															Privado
+														</span>
+													) : null}
+												</div>
+												<div
+													className="text-sm mt-2"
+													// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+													dangerouslySetInnerHTML={{ __html: followup.content }}
+												/>
+												{followup.documents &&
+													followup.documents.length > 0 && (
+														<div className="mt-3 pt-3 border-t">
+															<p className="text-xs font-medium mb-2">
+																Anexos:
+															</p>
+															<div className="flex flex-wrap gap-2">
+																{/* biome-ignore lint/suspicious/noExplicitAny: <explanation> */}
+																{followup.documents.map((doc: any) => (
+																	<a
+																		key={doc.id}
+																		href={doc.download_url}
+																		target="_blank"
+																		rel="noopener noreferrer"
+																		className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs hover:bg-muted/80"
+																	>
+																		<FileText className="h-3 w-3" />
+																		{doc.filename}
+																	</a>
+																))}
+															</div>
+														</div>
+													)}
+											</div>
+										))}
+									</div>
+								</CardContent>
+							</Card>
+						)}
+
+						<Card>
+							<CardHeader>
+								<CardTitle>Adicionar Resposta</CardTitle>
+								<CardDescription>
+									Responda ao chamado e atualize seu status
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<div className="space-y-4">
+									{/* Controles de status e prioridade movidos para cá */}
+									<div className="grid gap-4 md:grid-cols-2">
 										<div>
 											<h3 className="text-sm font-medium">Status</h3>
 											<div className="mt-1">
@@ -439,173 +552,10 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 												<PriorityIndicator priority={ticket.priority} />
 											</div>
 										</div>
-										<div>
-											<h3 className="text-sm font-medium">Categoria</h3>
-											<p className="mt-1 text-sm">
-												Categoria #{ticket.itilcategories_id}
-											</p>
-										</div>
 									</div>
 
-									<Separator />
+									<Separator className="my-2" />
 
-									<div>
-										<h3 className="text-sm font-medium mb-2">Descrição</h3>
-										<div
-											className="rounded-md border border-input bg-muted/40 p-4 text-sm"
-											// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-											dangerouslySetInnerHTML={{ __html: ticket.content }}
-										/>
-
-										{/* Exibir anexos do ticket */}
-										{ticketDocuments.length > 0 && (
-											<div className="mt-4 pt-4 border-t">
-												<h3 className="text-sm font-medium mb-2">Anexos:</h3>
-												<div className="flex flex-wrap gap-2">
-													{ticketDocuments.map((doc) => (
-														<div
-															key={doc.id}
-															className="flex items-center gap-2 p-2 border rounded-md"
-														>
-															<Paperclip className="h-4 w-4 text-muted-foreground" />
-															<span className="text-sm">{doc.filename}</span>
-														</div>
-													))}
-												</div>
-											</div>
-										)}
-									</div>
-								</div>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader>
-								<CardTitle>Histórico de Respostas</CardTitle>
-								<CardDescription>
-									Acompanhe todas as interações deste chamado
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<Tabs defaultValue="all" className="w-full">
-									<TabsList className="mb-4">
-										<TabsTrigger value="all">Todas</TabsTrigger>
-										<TabsTrigger value="public">Públicas</TabsTrigger>
-										<TabsTrigger value="private">Privadas</TabsTrigger>
-									</TabsList>
-									<TabsContent value="all" className="space-y-4">
-										{isLoadingFollowups ? (
-											<div className="text-center py-8">
-												{/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
-												<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-												<p className="mt-2 text-sm text-muted-foreground">
-													Carregando respostas...
-												</p>
-											</div>
-										) : followups.length > 0 ? (
-											followups.map((followup) => (
-												<div
-													key={followup.id}
-													className="rounded-lg border p-4"
-												>
-													<div className="flex items-start justify-between mb-2">
-														<div className="flex items-center gap-2">
-															<Avatar className="h-8 w-8">
-																<AvatarFallback>
-																	{followup.users_id ===
-																	ticket.users_id_recipient
-																		? getEmailInitial(
-																				followup.user?.email || "Usuário",
-																			)
-																		: getEmailInitial(
-																				followup.user?.email || "Atendente",
-																			)}
-																</AvatarFallback>
-															</Avatar>
-															<div>
-																<p className="text-sm font-medium">
-																	{followup.users_id ===
-																	ticket.users_id_recipient
-																		? "Solicitante"
-																		: "Atendente"}
-																</p>
-																<p className="text-xs text-muted-foreground">
-																	{formatDate(followup.date_creation)}
-																</p>
-															</div>
-														</div>
-														{followup.is_private ? (
-															<span className="rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800">
-																Privado
-															</span>
-														) : null}
-													</div>
-													<div
-														className="text-sm mt-2"
-														// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-														dangerouslySetInnerHTML={{
-															__html: followup.content,
-														}}
-													/>
-													{followup.documents &&
-														followup.documents.length > 0 && (
-															<div className="mt-3 pt-3 border-t">
-																<p className="text-xs font-medium mb-2">
-																	Anexos:
-																</p>
-																<div className="flex flex-wrap gap-2">
-																	{/* biome-ignore lint/suspicious/noExplicitAny: <explanation> */}
-																	{followup.documents.map((doc: any) => (
-																		<a
-																			key={doc.id}
-																			href={doc.download_url}
-																			target="_blank"
-																			rel="noopener noreferrer"
-																			className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs hover:bg-muted/80"
-																		>
-																			<FileText className="h-3 w-3" />
-																			{doc.filename}
-																		</a>
-																	))}
-																</div>
-															</div>
-														)}
-												</div>
-											))
-										) : (
-											<div className="text-center py-8">
-												<MessageSquare className="h-8 w-8 text-muted-foreground mx-auto" />
-												<p className="mt-2 text-sm text-muted-foreground">
-													Nenhuma resposta encontrada.
-												</p>
-											</div>
-										)}
-									</TabsContent>
-									<TabsContent value="public" className="space-y-4">
-										{/* Conteúdo similar para respostas públicas */}
-										<p className="text-center text-muted-foreground py-4">
-											Selecione a aba "Todas" para ver todas as respostas.
-										</p>
-									</TabsContent>
-									<TabsContent value="private" className="space-y-4">
-										{/* Conteúdo similar para respostas privadas */}
-										<p className="text-center text-muted-foreground py-4">
-											Selecione a aba "Todas" para ver todas as respostas.
-										</p>
-									</TabsContent>
-								</Tabs>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader>
-								<CardTitle>Adicionar Resposta</CardTitle>
-								<CardDescription>
-									Responda ao chamado e atualize seu status
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<div className="space-y-4">
 									<div>
 										<RichTextEditor
 											id="response-content"

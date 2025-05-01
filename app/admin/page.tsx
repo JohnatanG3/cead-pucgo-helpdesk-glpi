@@ -44,6 +44,7 @@ import {
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
 import { PriorityIndicator } from "@/components/priority-indicator";
+import { getEmailInitial } from "@/lib/utils";
 
 export default function AdminDashboard() {
 	const { user, isLoading: authLoading, logout } = useAuth();
@@ -279,10 +280,6 @@ export default function AdminDashboard() {
 			</CardFooter>
 		</Card>
 	);
-
-	const getEmailInitial = (email: string) => {
-		return email ? email[0].toUpperCase() : "A";
-	};
 
 	return (
 		<div className="flex min-h-screen flex-col">
