@@ -78,7 +78,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
       <div className="mb-8 flex flex-col items-center">
-        <img src="/puc-goias.svg" alt="Logo CEAD PUC GO" className="h-20 w-30 mb-4" />
+        <img src="/puc-goias.svg" alt="Logo CEAD PUC GO" className="h-30 w-30 mb-4" />
         <h1 className="text-2xl font-bold text-slate-900">CEAD - PUC GO</h1>
         <p className="text-slate-600">Sistema de Abertura de Chamados</p>
       </div>

@@ -246,11 +246,7 @@ export default function AdminDashboard() {
 			<header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
 				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
 					<div className="flex items-center gap-2">
-						<img
-							src="/puc-goias.svg"
-							alt="Logo CEAD PUC GO"
-							className="h-8 w-8"
-						/>
+						<img src="/puc-goias.svg" alt="Logo CEAD PUC GO" className="h-8 w-8" />
 						<span className="text-lg font-semibold">CEAD - PUC GO (Admin)</span>
 					</div>
 					<div className="flex items-center gap-4">
@@ -269,7 +265,10 @@ export default function AdminDashboard() {
 									className="flex items-center gap-2 text-white hover:bg-white/10"
 								>
 									<Avatar className="h-8 w-8">
-										<AvatarImage src="/diverse-user-avatars.png" alt="Avatar" />
+										<AvatarImage
+											src="/placeholder.svg?height=32&width=32"
+											alt="Avatar"
+										/>
 										<AvatarFallback>AD</AvatarFallback>
 									</Avatar>
 									<span className="hidden md:inline-flex">

@@ -367,11 +367,7 @@ export default function DashboardPage() {
 			<header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
 				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
 					<div className="flex items-center gap-2">
-						<img
-							src="/puc-goias.svg"
-							alt="Logo CEAD PUC GO"
-							className="h-8 w-8"
-						/>
+						<img src="/puc-goias.svg" alt="Logo CEAD PUC GO" className="h-8 w-8" />
 						<span className="text-lg font-semibold">CEAD - PUC GO</span>
 					</div>
 					<div className="flex items-center gap-4">
@@ -383,10 +379,7 @@ export default function DashboardPage() {
 									className="flex items-center gap-2 text-white hover:bg-white/10"
 								>
 									<Avatar className="h-8 w-8">
-										<AvatarImage
-											src="/placeholder.svg?height=32&width=32"
-											alt="Avatar"
-										/>
+										<AvatarImage src="/diverse-avatars.png" alt="Avatar" />
 										<AvatarFallback>
 											{user?.name?.charAt(0) || "U"}
 										</AvatarFallback>
@@ -855,7 +848,7 @@ export default function DashboardPage() {
 										</li>
 										<li>
 											<a
-												href="/tutoriais-da-plataforma"
+												href="/tutoriais.da-plataforma"
 												className="text-primary hover:underline"
 											>
 												Tutoriais da Plataforma
