@@ -1,8 +1,13 @@
 "use client";
 
+import {
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Filter, LogOut, Search, User } from "lucide-react";
+import { ChevronDown, LogOut, Search, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -18,9 +23,7 @@ import {
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuItem,
 	DropdownMenuLabel,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -33,9 +36,8 @@ import {
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
 import { PriorityIndicator } from "@/components/priority-indicator";
-
-// Certifique-se de importar a função getEmailInitial
 import { getEmailInitial } from "@/lib/utils";
+import { FilterDropdown } from "@/components/filter-dropdown";
 
 export default function TicketsPage() {
 	const { user, isLoading: authLoading, logout } = useAuth();
@@ -46,6 +48,20 @@ export default function TicketsPage() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isLoading, setIsLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState("my-tickets");
+
+	// Estados para filtros
+	const [statusFilters, setStatusFilters] = useState({
+		pending: false,
+		in_progress: false,
+		resolved: false,
+	});
+
+	const [priorityFilters, setPriorityFilters] = useState({
+		low: false,
+		medium: false,
+		high: false,
+		urgent: false,
+	});
 
 	// Verificar autenticação
 	useEffect(() => {
@@ -93,6 +109,12 @@ export default function TicketsPage() {
 			setIsLoading(false);
 		}
 	}
+
+	// Aplicar filtros
+	const applyFilters = () => {
+		toast.success("Filtros aplicados com sucesso!");
+		// Aqui você implementaria a lógica real de filtragem
+	};
 
 	// Filtrar tickets com base na busca
 	const filteredTickets = tickets.filter(
@@ -310,120 +332,148 @@ export default function TicketsPage() {
 									</CardDescription>
 								</div>
 								<div className="flex flex-col sm:flex-row gap-2">
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<Button
-												variant="default"
-												className="flex gap-2 w-full sm:w-auto"
-											>
-												<Filter className="h-4 w-4" />
-												Filtrar
-											</Button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent align="end" className="w-[200px]">
-											<DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
-											<DropdownMenuSeparator />
-											<div className="p-2">
-												<p className="text-sm font-medium mb-2">Status</p>
-												<div className="space-y-1">
-													<div className="flex items-center">
-														<input
-															type="checkbox"
-															id="status-pending"
-															className="mr-2"
-														/>
-														<label htmlFor="status-pending" className="text-sm">
-															Pendente
-														</label>
-													</div>
-													<div className="flex items-center">
-														<input
-															type="checkbox"
-															id="status-progress"
-															className="mr-2"
-														/>
-														<label
-															htmlFor="status-progress"
-															className="text-sm"
-														>
-															Em andamento
-														</label>
-													</div>
-													<div className="flex items-center">
-														<input
-															type="checkbox"
-															id="status-resolved"
-															className="mr-2"
-														/>
-														<label
-															htmlFor="status-resolved"
-															className="text-sm"
-														>
-															Resolvido
-														</label>
-													</div>
+									<FilterDropdown>
+										<div className="p-4">
+											<p className="text-sm font-medium mb-2">Status</p>
+											<div className="space-y-1">
+												<div className="flex items-center">
+													<input
+														type="checkbox"
+														id="status-pending"
+														className="mr-2"
+														checked={statusFilters.pending}
+														onChange={(e) =>
+															setStatusFilters({
+																...statusFilters,
+																pending: e.target.checked,
+															})
+														}
+													/>
+													<label htmlFor="status-pending" className="text-sm">
+														Pendente
+													</label>
 												</div>
+												<div className="flex items-center">
+													<input
+														type="checkbox"
+														id="status-progress"
+														className="mr-2"
+														checked={statusFilters.in_progress}
+														onChange={(e) =>
+															setStatusFilters({
+																...statusFilters,
+																in_progress: e.target.checked,
+															})
+														}
+													/>
+													<label htmlFor="status-progress" className="text-sm">
+														Em andamento
+													</label>
+												</div>
+												<div className="flex items-center">
+													<input
+														type="checkbox"
+														id="status-resolved"
+														className="mr-2"
+														checked={statusFilters.resolved}
+														onChange={(e) =>
+															setStatusFilters({
+																...statusFilters,
+																resolved: e.target.checked,
+															})
+														}
+													/>
+													<label htmlFor="status-resolved" className="text-sm">
+														Resolvido
+													</label>
+												</div>
+											</div>
 
-												<p className="text-sm font-medium mb-2 mt-4">
-													Prioridade
-												</p>
-												<div className="space-y-1">
-													<div className="flex items-center">
-														<input
-															type="checkbox"
-															id="priority-low"
-															className="mr-2"
-														/>
-														<label htmlFor="priority-low" className="text-sm">
-															Baixa
-														</label>
-													</div>
-													<div className="flex items-center">
-														<input
-															type="checkbox"
-															id="priority-medium"
-															className="mr-2"
-														/>
-														<label
-															htmlFor="priority-medium"
-															className="text-sm"
-														>
-															Média
-														</label>
-													</div>
-													<div className="flex items-center">
-														<input
-															type="checkbox"
-															id="priority-high"
-															className="mr-2"
-														/>
-														<label htmlFor="priority-high" className="text-sm">
-															Alta
-														</label>
-													</div>
-													<div className="flex items-center">
-														<input
-															type="checkbox"
-															id="priority-urgent"
-															className="mr-2"
-														/>
-														<label
-															htmlFor="priority-urgent"
-															className="text-sm"
-														>
-															Urgente
-														</label>
-													</div>
+											<p className="text-sm font-medium mb-2 mt-4">
+												Prioridade
+											</p>
+											<div className="space-y-1">
+												<div className="flex items-center">
+													<input
+														type="checkbox"
+														id="priority-low"
+														className="mr-2"
+														checked={priorityFilters.low}
+														onChange={(e) =>
+															setPriorityFilters({
+																...priorityFilters,
+																low: e.target.checked,
+															})
+														}
+													/>
+													<label htmlFor="priority-low" className="text-sm">
+														Baixa
+													</label>
+												</div>
+												<div className="flex items-center">
+													<input
+														type="checkbox"
+														id="priority-medium"
+														className="mr-2"
+														checked={priorityFilters.medium}
+														onChange={(e) =>
+															setPriorityFilters({
+																...priorityFilters,
+																medium: e.target.checked,
+															})
+														}
+													/>
+													<label htmlFor="priority-medium" className="text-sm">
+														Média
+													</label>
+												</div>
+												<div className="flex items-center">
+													<input
+														type="checkbox"
+														id="priority-high"
+														className="mr-2"
+														checked={priorityFilters.high}
+														onChange={(e) =>
+															setPriorityFilters({
+																...priorityFilters,
+																high: e.target.checked,
+															})
+														}
+													/>
+													<label htmlFor="priority-high" className="text-sm">
+														Alta
+													</label>
+												</div>
+												<div className="flex items-center">
+													<input
+														type="checkbox"
+														id="priority-urgent"
+														className="mr-2"
+														checked={priorityFilters.urgent}
+														onChange={(e) =>
+															setPriorityFilters({
+																...priorityFilters,
+																urgent: e.target.checked,
+															})
+														}
+													/>
+													<label htmlFor="priority-urgent" className="text-sm">
+														Urgente
+													</label>
 												</div>
 											</div>
-											<DropdownMenuSeparator />
-											<div className="p-2">
-												<Button size="sm" className="w-full">
-													Aplicar Filtros
-												</Button>
-											</div>
-										</DropdownMenuContent>
-									</DropdownMenu>
+										</div>
+										<DropdownMenuSeparator />
+										<div className="p-2">
+											<Button
+												size="sm"
+												className="w-full"
+												onClick={applyFilters}
+											>
+												Aplicar Filtros
+											</Button>
+										</div>
+									</FilterDropdown>
 								</div>
 							</div>
 						</CardHeader>

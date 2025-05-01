@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Search, Bug } from "lucide-react";
+import { ArrowLeft, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -219,7 +219,7 @@ export default function AdminTicketsPage() {
 					<SelectTrigger>
 						<SelectValue placeholder="Filtrar por status" />
 					</SelectTrigger>
-					<SelectContent>
+					<SelectContent className="max-h-[60vh] overflow-y-auto">
 						<SelectItem value="all">Todos os status</SelectItem>
 						<SelectItem value="new">Novos</SelectItem>
 						<SelectItem value="pending">Pendentes</SelectItem>
@@ -232,7 +232,7 @@ export default function AdminTicketsPage() {
 					<SelectTrigger>
 						<SelectValue placeholder="Filtrar por prioridade" />
 					</SelectTrigger>
-					<SelectContent>
+					<SelectContent className="max-h-[60vh] overflow-y-auto">
 						<SelectItem value="all">Todas as prioridades</SelectItem>
 						<SelectItem value="low">Baixa</SelectItem>
 						<SelectItem value="medium">Média</SelectItem>
@@ -301,64 +301,16 @@ export default function AdminTicketsPage() {
 														<p className="text-sm font-medium leading-none">
 															{ticket.name}
 														</p>
-														<div className="flex flex-wrap items-center gap-2 mt-1">
-															<span className="text-xs text-muted-foreground">
-																{formatDate(ticket.date_creation)} · ID:{" "}
-																{ticket.id}
-															</span>
-															<span
-																className={`text-xs px-2 py-0.5 rounded-full ${
-																	mapGLPIStatusToString(ticket.status) ===
-																	"in_progress"
-																		? "bg-yellow-100 text-yellow-800"
-																		: mapGLPIStatusToString(ticket.status) ===
-																					"resolved" ||
-																				mapGLPIStatusToString(ticket.status) ===
-																					"closed"
-																			? "bg-green-100 text-green-800"
-																			: "bg-blue-100 text-blue-800"
-																}`}
-															>
-																{mapGLPIStatusToString(ticket.status) ===
-																	"new" ||
-																mapGLPIStatusToString(ticket.status) ===
-																	"pending"
-																	? "Pendente"
-																	: mapGLPIStatusToString(ticket.status) ===
-																			"in_progress"
-																		? "Em andamento"
-																		: "Resolvido"}
-															</span>
-														</div>
 													</div>
-												</div>
-												<div className="flex gap-2 w-full sm:w-auto">
-													<Button
-														variant="default"
-														size="sm"
-														asChild
-														className="flex-1 sm:flex-none"
-													>
-														<Link href={`/admin/tickets/${ticket.id}`}>
-															Detalhes
-														</Link>
-													</Button>
-													<Button
-														variant="secondary"
-														size="sm"
-														onClick={() => handleDebug(ticket.id)}
-														className="flex-1 sm:flex-none"
-													>
-														<Bug className="h-4 w-4 mr-1" />
-														Debug
-													</Button>
 												</div>
 											</div>
 										))}
 									</div>
 								) : (
-									<div className="text-center py-6 text-muted-foreground">
-										Nenhum chamado encontrado com os filtros selecionados.
+									<div className="text-center py-6">
+										<p className="text-muted-foreground">
+											Nenhum chamado encontrado.
+										</p>
 									</div>
 								)}
 							</div>
@@ -371,56 +323,57 @@ export default function AdminTicketsPage() {
 						<CardHeader>
 							<CardTitle>Chamados Pendentes</CardTitle>
 							<CardDescription>
-								Chamados que aguardam atendimento
+								{
+									filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "pending",
+									).length
+								}{" "}
+								chamado
+								{filteredTickets.filter(
+									(ticket) =>
+										mapGLPIStatusToString(ticket.status) === "pending",
+								).length !== 1 && "s"}{" "}
+								encontrado
+								{filteredTickets.filter(
+									(ticket) =>
+										mapGLPIStatusToString(ticket.status) === "pending",
+								).length !== 1 && "s"}
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<div className="space-y-4">
-								{filteredTickets
-									.filter(
-										(ticket) =>
-											mapGLPIStatusToString(ticket.status) === "new" ||
-											mapGLPIStatusToString(ticket.status) === "pending",
-									)
-									.map((ticket) => (
-										<div
-											key={ticket.id}
-											className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
-										>
-											<div className="flex items-start sm:items-center space-x-4">
-												<PriorityIndicator priority={ticket.priority} />
-												<div>
-													<p className="text-sm font-medium leading-none">
-														{ticket.name}
-													</p>
-													<p className="text-xs text-muted-foreground">
-														{formatDate(ticket.date_creation)} · ID: {ticket.id}
-													</p>
+								{filteredTickets.filter(
+									(ticket) =>
+										mapGLPIStatusToString(ticket.status) === "pending",
+								).length > 0 ? (
+									filteredTickets
+										.filter(
+											(ticket) =>
+												mapGLPIStatusToString(ticket.status) === "pending",
+										)
+										.map((ticket) => (
+											<div
+												key={ticket.id}
+												className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
+											>
+												<div className="flex items-start sm:items-center space-x-4">
+													<PriorityIndicator priority={ticket.priority} />
+													<div>
+														<p className="text-sm font-medium leading-none">
+															{ticket.name}
+														</p>
+													</div>
 												</div>
 											</div>
-											<div className="flex gap-2 w-full sm:w-auto">
-												<Button
-													variant="default"
-													size="sm"
-													asChild
-													className="flex-1 sm:flex-none"
-												>
-													<Link href={`/admin/tickets/${ticket.id}`}>
-														Detalhes
-													</Link>
-												</Button>
-												<Button
-													variant="secondary"
-													size="sm"
-													onClick={() => handleDebug(ticket.id)}
-													className="flex-1 sm:flex-none"
-												>
-													<Bug className="h-4 w-4 mr-1" />
-													Debug
-												</Button>
-											</div>
-										</div>
-									))}
+										))
+								) : (
+									<div className="text-center py-6">
+										<p className="text-muted-foreground">
+											Nenhum chamado pendente encontrado.
+										</p>
+									</div>
+								)}
 							</div>
 						</CardContent>
 					</Card>
@@ -431,55 +384,57 @@ export default function AdminTicketsPage() {
 						<CardHeader>
 							<CardTitle>Chamados Em Andamento</CardTitle>
 							<CardDescription>
-								Chamados que estão sendo atendidos
+								{
+									filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "in_progress",
+									).length
+								}{" "}
+								chamado
+								{filteredTickets.filter(
+									(ticket) =>
+										mapGLPIStatusToString(ticket.status) === "in_progress",
+								).length !== 1 && "s"}{" "}
+								encontrado
+								{filteredTickets.filter(
+									(ticket) =>
+										mapGLPIStatusToString(ticket.status) === "in_progress",
+								).length !== 1 && "s"}
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<div className="space-y-4">
-								{filteredTickets
-									.filter(
-										(ticket) =>
-											mapGLPIStatusToString(ticket.status) === "in_progress",
-									)
-									.map((ticket) => (
-										<div
-											key={ticket.id}
-											className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
-										>
-											<div className="flex items-start sm:items-center space-x-4">
-												<PriorityIndicator priority={ticket.priority} />
-												<div>
-													<p className="text-sm font-medium leading-none">
-														{ticket.name}
-													</p>
-													<p className="text-xs text-muted-foreground">
-														{formatDate(ticket.date_creation)} · ID: {ticket.id}
-													</p>
+								{filteredTickets.filter(
+									(ticket) =>
+										mapGLPIStatusToString(ticket.status) === "in_progress",
+								).length > 0 ? (
+									filteredTickets
+										.filter(
+											(ticket) =>
+												mapGLPIStatusToString(ticket.status) === "in_progress",
+										)
+										.map((ticket) => (
+											<div
+												key={ticket.id}
+												className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
+											>
+												<div className="flex items-start sm:items-center space-x-4">
+													<PriorityIndicator priority={ticket.priority} />
+													<div>
+														<p className="text-sm font-medium leading-none">
+															{ticket.name}
+														</p>
+													</div>
 												</div>
 											</div>
-											<div className="flex gap-2 w-full sm:w-auto">
-												<Button
-													variant="default"
-													size="sm"
-													asChild
-													className="flex-1 sm:flex-none"
-												>
-													<Link href={`/admin/tickets/${ticket.id}`}>
-														Detalhes
-													</Link>
-												</Button>
-												<Button
-													variant="secondary"
-													size="sm"
-													onClick={() => handleDebug(ticket.id)}
-													className="flex-1 sm:flex-none"
-												>
-													<Bug className="h-4 w-4 mr-1" />
-													Debug
-												</Button>
-											</div>
-										</div>
-									))}
+										))
+								) : (
+									<div className="text-center py-6">
+										<p className="text-muted-foreground">
+											Nenhum chamado em andamento encontrado.
+										</p>
+									</div>
+								)}
 							</div>
 						</CardContent>
 					</Card>
@@ -489,55 +444,58 @@ export default function AdminTicketsPage() {
 					<Card>
 						<CardHeader>
 							<CardTitle>Chamados Resolvidos</CardTitle>
-							<CardDescription>Chamados que foram concluídos</CardDescription>
+							<CardDescription>
+								{
+									filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "resolved",
+									).length
+								}{" "}
+								chamado
+								{filteredTickets.filter(
+									(ticket) =>
+										mapGLPIStatusToString(ticket.status) === "resolved",
+								).length !== 1 && "s"}{" "}
+								encontrado
+								{filteredTickets.filter(
+									(ticket) =>
+										mapGLPIStatusToString(ticket.status) === "resolved",
+								).length !== 1 && "s"}
+							</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<div className="space-y-4">
-								{filteredTickets
-									.filter(
-										(ticket) =>
-											mapGLPIStatusToString(ticket.status) === "resolved" ||
-											mapGLPIStatusToString(ticket.status) === "closed",
-									)
-									.map((ticket) => (
-										<div
-											key={ticket.id}
-											className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
-										>
-											<div className="flex items-start sm:items-center space-x-4">
-												<PriorityIndicator priority={ticket.priority} />
-												<div>
-													<p className="text-sm font-medium leading-none">
-														{ticket.name}
-													</p>
-													<p className="text-xs text-muted-foreground">
-														{formatDate(ticket.date_creation)} · ID: {ticket.id}
-													</p>
+								{filteredTickets.filter(
+									(ticket) =>
+										mapGLPIStatusToString(ticket.status) === "resolved",
+								).length > 0 ? (
+									filteredTickets
+										.filter(
+											(ticket) =>
+												mapGLPIStatusToString(ticket.status) === "resolved",
+										)
+										.map((ticket) => (
+											<div
+												key={ticket.id}
+												className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
+											>
+												<div className="flex items-start sm:items-center space-x-4">
+													<PriorityIndicator priority={ticket.priority} />
+													<div>
+														<p className="text-sm font-medium leading-none">
+															{ticket.name}
+														</p>
+													</div>
 												</div>
 											</div>
-											<div className="flex gap-2 w-full sm:w-auto">
-												<Button
-													variant="default"
-													size="sm"
-													asChild
-													className="flex-1 sm:flex-none"
-												>
-													<Link href={`/admin/tickets/${ticket.id}`}>
-														Detalhes
-													</Link>
-												</Button>
-												<Button
-													variant="secondary"
-													size="sm"
-													onClick={() => handleDebug(ticket.id)}
-													className="flex-1 sm:flex-none"
-												>
-													<Bug className="h-4 w-4 mr-1" />
-													Debug
-												</Button>
-											</div>
-										</div>
-									))}
+										))
+								) : (
+									<div className="text-center py-6">
+										<p className="text-muted-foreground">
+											Nenhum chamado resolvido encontrado.
+										</p>
+									</div>
+								)}
 							</div>
 						</CardContent>
 					</Card>
