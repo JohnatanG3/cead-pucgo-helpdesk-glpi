@@ -2,6 +2,9 @@
  * Serviço para comunicação com a API do GLPI
  */
 
+// Importe o serviço de notificação no topo do arquivo
+import { notificationService } from "./notification-service";
+
 // Adicione esta classe de erro personalizada no início do arquivo
 export class GLPIError extends Error {
 	status: number;
@@ -1443,6 +1446,27 @@ export async function deleteDocument(documentId: number): Promise<void> {
 		}
 	} catch (error) {
 		console.error(`Erro ao excluir documento ${documentId}:`, error);
+		throw error;
+	}
+}
+
+// Adicione esta função ao arquivo lib/glpi-api.ts
+export async function handleApiRequest<T>(
+	requestFn: () => Promise<T>,
+	errorMessage = "Ocorreu um erro na operação",
+	showSuccessMessage = false,
+	successMessage = "Operação realizada com sucesso",
+): Promise<T> {
+	try {
+		const result = await requestFn();
+
+		if (showSuccessMessage) {
+			notificationService.addNotification("Sucesso", successMessage, "success");
+		}
+
+		return result;
+	} catch (error) {
+		notificationService.handleApiError(error, errorMessage);
 		throw error;
 	}
 }
