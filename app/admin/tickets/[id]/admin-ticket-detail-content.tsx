@@ -50,6 +50,14 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { getEmailInitial } from "@/lib/utils";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { AppHeader } from "@/components/app-header";
 
 // Interface para documentos
 interface Document {
@@ -81,6 +89,9 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [editedTitle, setEditedTitle] = useState(ticket?.name || "");
 	const [editedContent, setEditedContent] = useState(ticket?.content || "");
+	const [editedPriority, setEditedPriority] = useState<number>(
+		ticket?.priority || 3,
+	);
 	const [isEditing, setIsEditing] = useState(false);
 
 	// Estados para gerenciamento de anexos
@@ -211,10 +222,11 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 		setIsEditing(true);
 
 		try {
-			// 1. Atualizar o título e conteúdo do ticket
+			// 1. Atualizar o título, conteúdo e prioridade do ticket
 			await updateTicket(ticket.id, {
 				name: editedTitle,
 				content: editedContent,
+				priority: editedPriority,
 			});
 
 			// 2. Excluir documentos marcados para exclusão
@@ -251,6 +263,7 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 			// Atualizar o ticket local
 			ticket.name = editedTitle;
 			ticket.content = editedContent;
+			ticket.priority = editedPriority;
 
 			// Recarregar documentos
 			loadTicketDocuments(ticket.id);
@@ -343,6 +356,7 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 
 	return (
 		<div className="flex min-h-screen flex-col">
+			<AppHeader />
 
 			<main className="flex-1 p-4 md:p-6">
 				<div className="container mx-auto max-w-4xl">
@@ -634,6 +648,48 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 								minHeight="150px"
 								disabled={isEditing}
 							/>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="priority">Prioridade</Label>
+							<Select
+								value={editedPriority.toString()}
+								onValueChange={(value) => setEditedPriority(Number(value))}
+								disabled={isEditing}
+							>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Selecione a prioridade" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="1">
+										<div className="flex items-center">
+											<span className="priority-indicator priority-low" />
+											<span>Baixa</span>
+										</div>
+									</SelectItem>
+									<SelectItem value="2">
+										<div className="flex items-center">
+											<span className="priority-indicator priority-medium" />
+											<span>Média</span>
+										</div>
+									</SelectItem>
+									<SelectItem value="3">
+										<div className="flex items-center">
+											<span className="priority-indicator priority-high" />
+											<span>Alta</span>
+										</div>
+									</SelectItem>
+									<SelectItem value="4">
+										<div className="flex items-center">
+											<span className="priority-indicator priority-urgent" />
+											<span>Urgente</span>
+										</div>
+									</SelectItem>
+								</SelectContent>
+							</Select>
+							<div className="mt-1 text-xs text-muted-foreground flex items-center">
+								Prioridade atual:{" "}
+								<PriorityIndicator priority={ticket.priority} />
+							</div>
 						</div>
 
 						{/* Seção de gerenciamento de anexos */}
