@@ -172,12 +172,3 @@ Em ambiente de produção, recomenda-se:
 
 Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
 ```
-
-O README atualizado agora reflete todas as principais melhorias e funcionalidades que implementamos, incluindo:
-
-1. Menção ao cabeçalho unificado (AppHeader)
-2. Adição da funcionalidade de edição de prioridade dos chamados
-3. Inclusão dos novos componentes (FilterDropdown, ErrorMessage, LoadingSpinner, FormField)
-4. Descrição do sistema de tratamento de erros aprimorado
-5. Menção à validação em tempo real dos formulários
-6. Referência à página de debug para administradores
