@@ -30,6 +30,7 @@ import {
 	mapGLPIPriorityToString,
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
+import { BugIcon } from "@/components/icons/bug-icon";
 
 export default function AdminTicketsPage() {
 	const { user, isLoading: authLoading } = useAuth();
@@ -180,6 +181,45 @@ export default function AdminTicketsPage() {
 		);
 	}
 
+	// Função para renderizar um item de chamado com botões
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	const renderTicketItem = (ticket: any) => (
+		<div
+			key={ticket.id}
+			className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
+		>
+			<div className="flex items-start sm:items-center space-x-4">
+				<PriorityIndicator priority={ticket.priority} />
+				<div>
+					<p className="text-sm font-medium leading-none">{ticket.name}</p>
+					<p className="text-sm text-muted-foreground">
+						Aberto em {formatDate(ticket.date_creation)}
+					</p>
+				</div>
+			</div>
+			<div className="flex space-x-2">
+				<Link href={`/admin/tickets/${ticket.id}`}>
+					<Button
+						variant="default"
+						size="sm"
+						className="bg-cead-blue hover:bg-cead-blue/90"
+					>
+						Responder
+					</Button>
+				</Link>
+				<Button
+					variant="outline"
+					size="sm"
+					className="border-cead-blue text-cead-blue hover:bg-cead-blue/10"
+					onClick={() => handleDebug(ticket.id)}
+				>
+					<BugIcon className="mr-2 h-4 w-4" />
+					Debug
+				</Button>
+			</div>
+		</div>
+	);
+
 	return (
 		<div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
 			{/* Cabeçalho com título e botões - Redesenhado para melhor responsividade */}
@@ -290,21 +330,7 @@ export default function AdminTicketsPage() {
 									</div>
 								) : filteredTickets.length > 0 ? (
 									<div className="space-y-4">
-										{filteredTickets.map((ticket) => (
-											<div
-												key={ticket.id}
-												className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
-											>
-												<div className="flex items-start sm:items-center space-x-4">
-													<PriorityIndicator priority={ticket.priority} />
-													<div>
-														<p className="text-sm font-medium leading-none">
-															{ticket.name}
-														</p>
-													</div>
-												</div>
-											</div>
-										))}
+										{filteredTickets.map(renderTicketItem)}
 									</div>
 								) : (
 									<div className="text-center py-6">
@@ -352,21 +378,7 @@ export default function AdminTicketsPage() {
 											(ticket) =>
 												mapGLPIStatusToString(ticket.status) === "pending",
 										)
-										.map((ticket) => (
-											<div
-												key={ticket.id}
-												className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
-											>
-												<div className="flex items-start sm:items-center space-x-4">
-													<PriorityIndicator priority={ticket.priority} />
-													<div>
-														<p className="text-sm font-medium leading-none">
-															{ticket.name}
-														</p>
-													</div>
-												</div>
-											</div>
-										))
+										.map(renderTicketItem)
 								) : (
 									<div className="text-center py-6">
 										<p className="text-muted-foreground">
@@ -413,21 +425,7 @@ export default function AdminTicketsPage() {
 											(ticket) =>
 												mapGLPIStatusToString(ticket.status) === "in_progress",
 										)
-										.map((ticket) => (
-											<div
-												key={ticket.id}
-												className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
-											>
-												<div className="flex items-start sm:items-center space-x-4">
-													<PriorityIndicator priority={ticket.priority} />
-													<div>
-														<p className="text-sm font-medium leading-none">
-															{ticket.name}
-														</p>
-													</div>
-												</div>
-											</div>
-										))
+										.map(renderTicketItem)
 								) : (
 									<div className="text-center py-6">
 										<p className="text-muted-foreground">
@@ -474,21 +472,7 @@ export default function AdminTicketsPage() {
 											(ticket) =>
 												mapGLPIStatusToString(ticket.status) === "resolved",
 										)
-										.map((ticket) => (
-											<div
-												key={ticket.id}
-												className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4 border-b pb-4"
-											>
-												<div className="flex items-start sm:items-center space-x-4">
-													<PriorityIndicator priority={ticket.priority} />
-													<div>
-														<p className="text-sm font-medium leading-none">
-															{ticket.name}
-														</p>
-													</div>
-												</div>
-											</div>
-										))
+										.map(renderTicketItem)
 								) : (
 									<div className="text-center py-6">
 										<p className="text-muted-foreground">
