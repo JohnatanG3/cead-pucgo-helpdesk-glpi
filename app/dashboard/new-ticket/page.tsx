@@ -5,7 +5,7 @@ import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -263,6 +263,18 @@ export default function NewTicketPage() {
 											</SelectContent>
 										</Select>
 									</div>
+								</div>
+
+								<div className="space-y-2">
+									{/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+									<label className="text-sm font-medium">Solicitante</label>
+									<div className="flex items-center gap-2 p-2 border rounded-md bg-muted/30">
+										<User className="h-4 w-4 text-muted-foreground" />
+										<span>{user?.email || "Usuário"}</span>
+									</div>
+									<p className="text-xs text-muted-foreground">
+										Chamado será aberto em seu nome
+									</p>
 								</div>
 
 								<div className="space-y-2">

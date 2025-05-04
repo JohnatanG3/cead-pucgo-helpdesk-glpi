@@ -372,7 +372,11 @@ export default function DashboardPage() {
 			<header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
 				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
 					<div className="flex items-center gap-2">
-						<img src="/puc-goias.svg" alt="Logo CEAD PUC GO" className="h-8 w-8" />
+						<img
+							src="/puc-goias.svg"
+							alt="Logo CEAD PUC GO"
+							className="h-8 w-8"
+						/>
 						<span className="text-lg font-semibold">CEAD - PUC GO</span>
 					</div>
 					<div className="flex items-center gap-4">
@@ -390,7 +394,7 @@ export default function DashboardPage() {
 										</AvatarFallback>
 									</Avatar>
 									<span className="hidden md:inline-flex">
-										{user?.name || "Usuário"}
+										{user?.email || "Usuário"}
 									</span>
 									<ChevronDown className="h-4 w-4" />
 								</Button>
@@ -571,7 +575,7 @@ export default function DashboardPage() {
 										<Label>Solicitante</Label>
 										<div className="flex items-center gap-2 p-2 border rounded-md bg-muted/30">
 											<User className="h-4 w-4 text-muted-foreground" />
-											<span>{user?.name || "Usuário atual"}</span>
+											<span>{user?.email || "Usuário"}</span>
 										</div>
 										<p className="text-xs text-muted-foreground">
 											Chamado será aberto em seu nome
@@ -845,7 +849,7 @@ export default function DashboardPage() {
 									<ul className="mt-1 space-y-1 text-sm text-muted-foreground">
 										<li>
 											<a
-												href="/manual-do-coorndenador"
+												href="/manual-do-coordenador"
 												className="text-primary hover:underline"
 											>
 												Manual do Coordenador
@@ -853,7 +857,7 @@ export default function DashboardPage() {
 										</li>
 										<li>
 											<a
-												href="tutoriais-da-plataforma"
+												href="/tutoriais-da-plataforma"
 												className="text-primary hover:underline"
 											>
 												Tutoriais da Plataforma
@@ -888,7 +892,7 @@ export default function DashboardPage() {
 							Termos de Uso
 						</a>
 						<a
-							href="/politica-de-privacidade"
+							href="/politica-de-privicidade"
 							className="text-sm text-muted-foreground hover:underline"
 						>
 							Política de Privacidade

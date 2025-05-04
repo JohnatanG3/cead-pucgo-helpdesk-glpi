@@ -17,20 +17,7 @@ const handler = NextAuth({
         }
 
         try {
-          // Modo de desenvolvimento - aceita qualquer credencial válida
-          if (process.env.NODE_ENV === "development") {
-            const isAdmin = credentials.email.includes("admin") || credentials.email.includes("suporte")
-
-            return {
-              id: "1",
-              name: isAdmin ? "Administrador" : "Usuário",
-              email: credentials.email,
-              role: isAdmin ? "admin" : "user",
-              sessionToken: "dev-session-token",
-            }
-          }
-
-          // Autenticação real com o GLPI para produção
+          // Autenticação real com o GLPI
           const result = await authenticateWithGLPI(credentials.email, credentials.password)
 
           if (!result.success || !result.user) {
@@ -62,9 +49,11 @@ const handler = NextAuth({
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (token) {
+        session.user.id = token.id as string
+        session.user.name = token.name as string
+        session.user.email = token.email as string
         session.user.role = token.role as string
-        session.user.sessionToken = token.sessionToken as string
       }
       return session
     },
@@ -77,7 +66,6 @@ const handler = NextAuth({
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
-  debug: process.env.NODE_ENV === "development",
 })
 
 export { handler as GET, handler as POST }
