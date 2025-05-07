@@ -5,28 +5,17 @@ Este é um sistema de gerenciamento de chamados desenvolvido para o CEAD (Coorde
 ## Funcionalidades
 
 - Autenticação de usuários
-- Abertura de chamados com prioridade e categoria
-- Edição de chamados (título, descrição e prioridade)
+- Abertura de chamados
 - Atribuição de chamados a técnicos ou grupos
-- Acompanhamento de status em tempo real
+- Acompanhamento de status
 - Upload de anexos
 - Comentários em chamados
-- Painel administrativo com estatísticas
+- Painel administrativo
 - Sistema de notificações
 - Interface responsiva para dispositivos móveis
-- Tratamento de erros avançado
-- Validação em tempo real dos formulários
-- Filtros com rolagem para listas extensas
-
-## Componentes Principais
-
-- **AppHeader**: Cabeçalho unificado para interfaces de usuário e administrador
-- **FilterDropdown**: Componente de filtro com suporte a rolagem para listas extensas
-- **ErrorMessage**: Exibição padronizada de mensagens de erro
-- **LoadingSpinner**: Indicador de carregamento
-- **FormField**: Campo de formulário com validação em tempo real
-- **PriorityIndicator**: Indicador visual de prioridade dos chamados
-- **NotificationBell**: Sistema de notificações em tempo real
+- Perfis de usuário personalizáveis
+- Relatórios e estatísticas
+- Gerenciamento de categorias
 
 ## Requisitos
 
@@ -38,7 +27,7 @@ Este é um sistema de gerenciamento de chamados desenvolvido para o CEAD (Coorde
 
 Crie um arquivo `.env.local` na raiz do projeto com as seguintes variáveis:
 
-```
+\`\`\`
 # URL da API do GLPI
 NEXT_PUBLIC_GLPI_API_URL=http://seu-servidor-glpi/apirest.php
 
@@ -51,29 +40,29 @@ REDIS_URL=redis://usuario:senha@seu-servidor-redis:6379
 
 # Usar dados simulados para desenvolvimento
 USE_MOCK_DATA=true
-```
+\`\`\`
 
 ## Instalação
 
 1. Clone o repositório:
-```bash
+\`\`\`bash
 git clone https://github.com/JohnatanG3/cead-pucgo-helpdesk-glpi.git
 cd cead-pucgo-helpdesk-glpi
-```
+\`\`\`
 
 2. Instale as dependências:
-```bash
+\`\`\`bash
 npm install
 # ou
 yarn
-```
+\`\`\`
 
 3. Execute o servidor de desenvolvimento:
-```bash
+\`\`\`bash
 npm run dev
 # ou
 yarn dev
-```
+\`\`\`
 
 4. Acesse `http://localhost:3000` no seu navegador.
 
@@ -86,25 +75,35 @@ yarn dev
 - `/types` - Definições de tipos TypeScript
 - `/public` - Arquivos estáticos (imagens, favicon, etc.)
 
-## Tratamento de Erros
+## Principais Funcionalidades
 
-O sistema implementa um tratamento de erros robusto:
+### Sistema de Chamados
 
-- **handleApiRequest**: Função utilitária para simplificar chamadas à API com tratamento de erros padronizado
-- **ErrorMessage**: Componente para exibição consistente de mensagens de erro
-- **notificationService**: Serviço para exibição de notificações de sucesso, erro e informações
+- Criação e acompanhamento de chamados
+- Atribuição de prioridades e categorias
+- Upload de anexos e documentos
+- Comentários e atualizações de status
 
-## Validação de Dados
+### Painel Administrativo
 
-O sistema utiliza a biblioteca Zod para validação de dados nos formulários, com validação em tempo real através do componente FormField.
+- Gerenciamento de todos os chamados
+- Atribuição de chamados a técnicos
+- Gerenciamento de categorias
+- Relatórios e estatísticas
 
-## Integração com o GLPI
+### Perfil de Usuário
+
+- Visualização e edição de informações pessoais
+- Alteração de senha
+- Preferências de notificação
+- Histórico de atividades
+
+### Integração com o GLPI
 
 O sistema se comunica com o GLPI através de sua API REST. As principais funcionalidades implementadas são:
 
 - Autenticação via token
 - Listagem e criação de chamados
-- Edição de chamados (título, descrição e prioridade)
 - Upload de documentos
 - Gerenciamento de categorias
 - Atribuição de chamados a técnicos e grupos
@@ -124,6 +123,10 @@ Em ambiente de desenvolvimento, o sistema utiliza dados simulados (mock data) pa
 
 Para usar dados reais durante o desenvolvimento, configure as variáveis de ambiente e altere a variável de ambiente `USE_MOCK_DATA` para "false".
 
+### Validação de Dados
+
+O sistema utiliza a biblioteca Zod para validação de dados nos formulários. Os schemas de validação estão definidos em `lib/validation.ts`.
+
 ### Gestão de Sessões
 
 O sistema implementa um mecanismo de cache para tokens de sessão do GLPI, com renovação automática antes da expiração. Em produção, é possível utilizar Redis para armazenamento persistente dos tokens.
@@ -136,19 +139,19 @@ O sistema inclui um serviço de notificações que permite alertar os usuários 
 
 Para build de produção:
 
-```bash
+\`\`\`bash
 npm run build
 # ou
 yarn build
-```
+\`\`\`
 
 Para executar em produção:
 
-```bash
+\`\`\`bash
 npm start
 # ou
 yarn start
-```
+\`\`\`
 
 ### Configuração para Produção
 
@@ -166,9 +169,9 @@ Em ambiente de produção, recomenda-se:
 - Editor de texto rico para descrições e respostas
 - Upload de múltiplos arquivos
 - Filtros avançados para busca de chamados
-- Página de debug para administradores
+- Perfis de usuário personalizáveis
+- Relatórios detalhados para administradores
 
 ## Licença
 
 Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
-```
