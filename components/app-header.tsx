@@ -55,9 +55,13 @@ export function AppHeader({ isAdmin = false }: AppHeaderProps) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Perfil
+              <DropdownMenuItem asChild>
+                <Link href={isAdmin ? "/admin/profile" : "/dashboard/profile"}>
+                  <div className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    Perfil
+                  </div>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
