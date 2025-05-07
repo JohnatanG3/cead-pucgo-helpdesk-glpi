@@ -31,6 +31,7 @@ import {
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
 import { BugIcon } from "@/components/icons/bug-icon";
+import { AppHeader } from "@/components/app-header";
 
 export default function AdminTicketsPage() {
 	const { user, isLoading: authLoading } = useAuth();
@@ -221,270 +222,274 @@ export default function AdminTicketsPage() {
 	);
 
 	return (
-		<div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-			{/* Cabeçalho com título e botões - Redesenhado para melhor responsividade */}
-			<div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-				<div className="flex items-center space-x-4">
-					<Button variant="outline" size="icon" asChild className="shrink-0">
-						<Link href="/admin">
-							<ArrowLeft className="h-4 w-4" />
-							<span className="sr-only">Voltar</span>
+		<div className="flex min-h-screen flex-col">
+			<AppHeader isAdmin={true} />
+			<div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+				{/* Cabeçalho com título e botões - Redesenhado para melhor responsividade */}
+				<div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+					<div className="flex items-center space-x-4">
+						<Button variant="outline" size="icon" asChild className="shrink-0">
+							<Link href="/admin">
+								<ArrowLeft className="h-4 w-4" />
+								<span className="sr-only">Voltar</span>
+							</Link>
+						</Button>
+						<h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
+							Chamados
+						</h2>
+					</div>
+					<Button size="sm" asChild className="w-full sm:w-auto">
+						<Link href="/admin/new-ticket">
+							<Plus className="mr-2 h-4 w-4" />
+							Novo Chamado
 						</Link>
 					</Button>
-					<h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
-						Chamados
-					</h2>
 				</div>
-				<Button size="sm" asChild className="w-full sm:w-auto">
-					<Link href="/admin/new-ticket">
-						<Plus className="mr-2 h-4 w-4" />
-						Novo Chamado
-					</Link>
-				</Button>
-			</div>
 
-			{/* Filtros - Redesenhados para melhor responsividade */}
-			<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-				<div className="relative">
-					<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-					<Input
-						type="search"
-						placeholder="Buscar chamados..."
-						className="pl-8"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
+				{/* Filtros - Redesenhados para melhor responsividade */}
+				<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+					<div className="relative">
+						<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+						<Input
+							type="search"
+							placeholder="Buscar chamados..."
+							className="pl-8"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+						/>
+					</div>
+					<Select value={statusFilter} onValueChange={setStatusFilter}>
+						<SelectTrigger>
+							<SelectValue placeholder="Filtrar por status" />
+						</SelectTrigger>
+						<SelectContent className="max-h-[60vh] overflow-y-auto">
+							<SelectItem value="all">Todos os status</SelectItem>
+							<SelectItem value="new">Novos</SelectItem>
+							<SelectItem value="pending">Pendentes</SelectItem>
+							<SelectItem value="in_progress">Em andamento</SelectItem>
+							<SelectItem value="resolved">Resolvidos</SelectItem>
+							<SelectItem value="closed">Fechados</SelectItem>
+						</SelectContent>
+					</Select>
+					<Select value={priorityFilter} onValueChange={setPriorityFilter}>
+						<SelectTrigger>
+							<SelectValue placeholder="Filtrar por prioridade" />
+						</SelectTrigger>
+						<SelectContent className="max-h-[60vh] overflow-y-auto">
+							<SelectItem value="all">Todas as prioridades</SelectItem>
+							<SelectItem value="low">Baixa</SelectItem>
+							<SelectItem value="medium">Média</SelectItem>
+							<SelectItem value="high">Alta</SelectItem>
+							<SelectItem value="urgent">Urgente</SelectItem>
+						</SelectContent>
+					</Select>
 				</div>
-				<Select value={statusFilter} onValueChange={setStatusFilter}>
-					<SelectTrigger>
-						<SelectValue placeholder="Filtrar por status" />
-					</SelectTrigger>
-					<SelectContent className="max-h-[60vh] overflow-y-auto">
-						<SelectItem value="all">Todos os status</SelectItem>
-						<SelectItem value="new">Novos</SelectItem>
-						<SelectItem value="pending">Pendentes</SelectItem>
-						<SelectItem value="in_progress">Em andamento</SelectItem>
-						<SelectItem value="resolved">Resolvidos</SelectItem>
-						<SelectItem value="closed">Fechados</SelectItem>
-					</SelectContent>
-				</Select>
-				<Select value={priorityFilter} onValueChange={setPriorityFilter}>
-					<SelectTrigger>
-						<SelectValue placeholder="Filtrar por prioridade" />
-					</SelectTrigger>
-					<SelectContent className="max-h-[60vh] overflow-y-auto">
-						<SelectItem value="all">Todas as prioridades</SelectItem>
-						<SelectItem value="low">Baixa</SelectItem>
-						<SelectItem value="medium">Média</SelectItem>
-						<SelectItem value="high">Alta</SelectItem>
-						<SelectItem value="urgent">Urgente</SelectItem>
-					</SelectContent>
-				</Select>
-			</div>
 
-			{/* Tabs - Redesenhadas para melhor responsividade */}
-			<Tabs defaultValue="all" className="space-y-4">
-				<TabsList className="w-full flex overflow-x-auto no-scrollbar">
-					<TabsTrigger value="all" className="flex-1">
-						Todos
-					</TabsTrigger>
-					<TabsTrigger value="pending" className="flex-1">
-						Pendentes
-					</TabsTrigger>
-					<TabsTrigger value="in_progress" className="flex-1">
-						Em Andamento
-					</TabsTrigger>
-					<TabsTrigger value="resolved" className="flex-1">
-						Resolvidos
-					</TabsTrigger>
-				</TabsList>
+				{/* Tabs - Redesenhadas para melhor responsividade */}
+				<Tabs defaultValue="all" className="space-y-4">
+					<TabsList className="w-full flex overflow-x-auto no-scrollbar">
+						<TabsTrigger value="all" className="flex-1">
+							Todos
+						</TabsTrigger>
+						<TabsTrigger value="pending" className="flex-1">
+							Pendentes
+						</TabsTrigger>
+						<TabsTrigger value="in_progress" className="flex-1">
+							Em Andamento
+						</TabsTrigger>
+						<TabsTrigger value="resolved" className="flex-1">
+							Resolvidos
+						</TabsTrigger>
+					</TabsList>
 
-				<TabsContent value="all" className="space-y-4">
-					<Card>
-						<CardHeader>
-							<CardTitle>Todos os Chamados</CardTitle>
-							<CardDescription>
-								{filteredTickets.length} chamado
-								{filteredTickets.length !== 1 && "s"} encontrado
-								{filteredTickets.length !== 1 && "s"}
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div className="space-y-4">
-								{timeoutOccurred && tickets.length === 0 ? (
-									<div className="text-center py-6">
-										<p className="text-amber-500 font-medium">
-											Tempo limite excedido ao carregar chamados.
-										</p>
-										<Button
-											variant="outline"
-											className="mt-4"
-											onClick={() => {
-												setTimeoutOccurred(false);
-												setIsLoading(true);
-												loadTickets();
-											}}
-										>
-											Tentar novamente
-										</Button>
-									</div>
-								) : filteredTickets.length > 0 ? (
-									<div className="space-y-4">
-										{filteredTickets.map(renderTicketItem)}
-									</div>
-								) : (
-									<div className="text-center py-6">
-										<p className="text-muted-foreground">
-											Nenhum chamado encontrado.
-										</p>
-									</div>
-								)}
-							</div>
-						</CardContent>
-					</Card>
-				</TabsContent>
+					<TabsContent value="all" className="space-y-4">
+						<Card>
+							<CardHeader>
+								<CardTitle>Todos os Chamados</CardTitle>
+								<CardDescription>
+									{filteredTickets.length} chamado
+									{filteredTickets.length !== 1 && "s"} encontrado
+									{filteredTickets.length !== 1 && "s"}
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<div className="space-y-4">
+									{timeoutOccurred && tickets.length === 0 ? (
+										<div className="text-center py-6">
+											<p className="text-amber-500 font-medium">
+												Tempo limite excedido ao carregar chamados.
+											</p>
+											<Button
+												variant="outline"
+												className="mt-4"
+												onClick={() => {
+													setTimeoutOccurred(false);
+													setIsLoading(true);
+													loadTickets();
+												}}
+											>
+												Tentar novamente
+											</Button>
+										</div>
+									) : filteredTickets.length > 0 ? (
+										<div className="space-y-4">
+											{filteredTickets.map(renderTicketItem)}
+										</div>
+									) : (
+										<div className="text-center py-6">
+											<p className="text-muted-foreground">
+												Nenhum chamado encontrado.
+											</p>
+										</div>
+									)}
+								</div>
+							</CardContent>
+						</Card>
+					</TabsContent>
 
-				<TabsContent value="pending" className="space-y-4">
-					<Card>
-						<CardHeader>
-							<CardTitle>Chamados Pendentes</CardTitle>
-							<CardDescription>
-								{
-									filteredTickets.filter(
-										(ticket) =>
-											mapGLPIStatusToString(ticket.status) === "pending",
-									).length
-								}{" "}
-								chamado
-								{filteredTickets.filter(
-									(ticket) =>
-										mapGLPIStatusToString(ticket.status) === "pending",
-								).length !== 1 && "s"}{" "}
-								encontrado
-								{filteredTickets.filter(
-									(ticket) =>
-										mapGLPIStatusToString(ticket.status) === "pending",
-								).length !== 1 && "s"}
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div className="space-y-4">
-								{filteredTickets.filter(
-									(ticket) =>
-										mapGLPIStatusToString(ticket.status) === "pending",
-								).length > 0 ? (
-									filteredTickets
-										.filter(
+					<TabsContent value="pending" className="space-y-4">
+						<Card>
+							<CardHeader>
+								<CardTitle>Chamados Pendentes</CardTitle>
+								<CardDescription>
+									{
+										filteredTickets.filter(
 											(ticket) =>
 												mapGLPIStatusToString(ticket.status) === "pending",
-										)
-										.map(renderTicketItem)
-								) : (
-									<div className="text-center py-6">
-										<p className="text-muted-foreground">
-											Nenhum chamado pendente encontrado.
-										</p>
-									</div>
-								)}
-							</div>
-						</CardContent>
-					</Card>
-				</TabsContent>
-
-				<TabsContent value="in_progress" className="space-y-4">
-					<Card>
-						<CardHeader>
-							<CardTitle>Chamados Em Andamento</CardTitle>
-							<CardDescription>
-								{
-									filteredTickets.filter(
+										).length
+									}{" "}
+									chamado
+									{filteredTickets.filter(
 										(ticket) =>
-											mapGLPIStatusToString(ticket.status) === "in_progress",
-									).length
-								}{" "}
-								chamado
-								{filteredTickets.filter(
-									(ticket) =>
-										mapGLPIStatusToString(ticket.status) === "in_progress",
-								).length !== 1 && "s"}{" "}
-								encontrado
-								{filteredTickets.filter(
-									(ticket) =>
-										mapGLPIStatusToString(ticket.status) === "in_progress",
-								).length !== 1 && "s"}
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div className="space-y-4">
-								{filteredTickets.filter(
-									(ticket) =>
-										mapGLPIStatusToString(ticket.status) === "in_progress",
-								).length > 0 ? (
-									filteredTickets
-										.filter(
+											mapGLPIStatusToString(ticket.status) === "pending",
+									).length !== 1 && "s"}{" "}
+									encontrado
+									{filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "pending",
+									).length !== 1 && "s"}
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<div className="space-y-4">
+									{filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "pending",
+									).length > 0 ? (
+										filteredTickets
+											.filter(
+												(ticket) =>
+													mapGLPIStatusToString(ticket.status) === "pending",
+											)
+											.map(renderTicketItem)
+									) : (
+										<div className="text-center py-6">
+											<p className="text-muted-foreground">
+												Nenhum chamado pendente encontrado.
+											</p>
+										</div>
+									)}
+								</div>
+							</CardContent>
+						</Card>
+					</TabsContent>
+
+					<TabsContent value="in_progress" className="space-y-4">
+						<Card>
+							<CardHeader>
+								<CardTitle>Chamados Em Andamento</CardTitle>
+								<CardDescription>
+									{
+										filteredTickets.filter(
 											(ticket) =>
 												mapGLPIStatusToString(ticket.status) === "in_progress",
-										)
-										.map(renderTicketItem)
-								) : (
-									<div className="text-center py-6">
-										<p className="text-muted-foreground">
-											Nenhum chamado em andamento encontrado.
-										</p>
-									</div>
-								)}
-							</div>
-						</CardContent>
-					</Card>
-				</TabsContent>
-
-				<TabsContent value="resolved" className="space-y-4">
-					<Card>
-						<CardHeader>
-							<CardTitle>Chamados Resolvidos</CardTitle>
-							<CardDescription>
-								{
-									filteredTickets.filter(
+										).length
+									}{" "}
+									chamado
+									{filteredTickets.filter(
 										(ticket) =>
-											mapGLPIStatusToString(ticket.status) === "resolved",
-									).length
-								}{" "}
-								chamado
-								{filteredTickets.filter(
-									(ticket) =>
-										mapGLPIStatusToString(ticket.status) === "resolved",
-								).length !== 1 && "s"}{" "}
-								encontrado
-								{filteredTickets.filter(
-									(ticket) =>
-										mapGLPIStatusToString(ticket.status) === "resolved",
-								).length !== 1 && "s"}
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div className="space-y-4">
-								{filteredTickets.filter(
-									(ticket) =>
-										mapGLPIStatusToString(ticket.status) === "resolved",
-								).length > 0 ? (
-									filteredTickets
-										.filter(
+											mapGLPIStatusToString(ticket.status) === "in_progress",
+									).length !== 1 && "s"}{" "}
+									encontrado
+									{filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "in_progress",
+									).length !== 1 && "s"}
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<div className="space-y-4">
+									{filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "in_progress",
+									).length > 0 ? (
+										filteredTickets
+											.filter(
+												(ticket) =>
+													mapGLPIStatusToString(ticket.status) ===
+													"in_progress",
+											)
+											.map(renderTicketItem)
+									) : (
+										<div className="text-center py-6">
+											<p className="text-muted-foreground">
+												Nenhum chamado em andamento encontrado.
+											</p>
+										</div>
+									)}
+								</div>
+							</CardContent>
+						</Card>
+					</TabsContent>
+
+					<TabsContent value="resolved" className="space-y-4">
+						<Card>
+							<CardHeader>
+								<CardTitle>Chamados Resolvidos</CardTitle>
+								<CardDescription>
+									{
+										filteredTickets.filter(
 											(ticket) =>
 												mapGLPIStatusToString(ticket.status) === "resolved",
-										)
-										.map(renderTicketItem)
-								) : (
-									<div className="text-center py-6">
-										<p className="text-muted-foreground">
-											Nenhum chamado resolvido encontrado.
-										</p>
-									</div>
-								)}
-							</div>
-						</CardContent>
-					</Card>
-				</TabsContent>
-			</Tabs>
+										).length
+									}{" "}
+									chamado
+									{filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "resolved",
+									).length !== 1 && "s"}{" "}
+									encontrado
+									{filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "resolved",
+									).length !== 1 && "s"}
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<div className="space-y-4">
+									{filteredTickets.filter(
+										(ticket) =>
+											mapGLPIStatusToString(ticket.status) === "resolved",
+									).length > 0 ? (
+										filteredTickets
+											.filter(
+												(ticket) =>
+													mapGLPIStatusToString(ticket.status) === "resolved",
+											)
+											.map(renderTicketItem)
+									) : (
+										<div className="text-center py-6">
+											<p className="text-muted-foreground">
+												Nenhum chamado resolvido encontrado.
+											</p>
+										</div>
+									)}
+								</div>
+							</CardContent>
+						</Card>
+					</TabsContent>
+				</Tabs>
+			</div>
 		</div>
 	);
 }

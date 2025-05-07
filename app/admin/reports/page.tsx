@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Download, LogOut, User } from "lucide-react";
+import { Download } from "lucide-react";
 import { toast } from "sonner";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -14,14 +12,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -40,6 +30,7 @@ import {
 	type GLPICategory,
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
+import { AppHeader } from "@/components/app-header";
 
 export default function ReportsPage() {
 	const { user, isLoading: authLoading, logout } = useAuth();
@@ -211,53 +202,7 @@ export default function ReportsPage() {
 
 	return (
 		<div className="flex min-h-screen flex-col">
-			<header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
-				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
-					<div className="flex items-center gap-2">
-						<img
-							src="/puc-goias.svg"
-							alt="Logo CEAD PUC GO"
-							className="h-8 w-8"
-						/>
-						<span className="text-lg font-semibold">CEAD - PUC GO (Admin)</span>
-					</div>
-					<div className="flex items-center gap-4">
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="flex items-center gap-2 text-white hover:bg-white/10"
-								>
-									<Avatar className="h-8 w-8">
-										<AvatarImage
-											src="/placeholder.svg?height=32&width=32"
-											alt="Avatar"
-										/>
-										<AvatarFallback>AD</AvatarFallback>
-									</Avatar>
-									<span className="hidden md:inline-flex">
-										{user?.name || "Administrador"}
-									</span>
-									<ChevronDown className="h-4 w-4" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem>
-									<User className="mr-2 h-4 w-4" />
-									Perfil
-								</DropdownMenuItem>
-								<DropdownMenuItem onClick={logout}>
-									<LogOut className="mr-2 h-4 w-4" />
-									Sair
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</div>
-				</div>
-			</header>
-
+			<AppHeader isAdmin={true} />
 			<main className="flex-1 p-4 md:p-6">
 				<div className="container mx-auto grid gap-6">
 					<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

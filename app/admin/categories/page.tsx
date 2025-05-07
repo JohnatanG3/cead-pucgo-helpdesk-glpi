@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -45,6 +44,7 @@ import {
 	type GLPICategory,
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
+import { AppHeader } from "@/components/app-header";
 
 export default function AdminCategoriesPage() {
 	const { user, isLoading: authLoading } = useAuth();
@@ -217,15 +217,7 @@ export default function AdminCategoriesPage() {
 
 	return (
 		<div className="flex min-h-screen flex-col">
-			<header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
-				<div className="container flex h-16 items-center px-4 md:px-6">
-					<Link href="/admin" className="flex items-center gap-2 font-semibold">
-						<ArrowLeft className="h-5 w-5" />
-						Voltar para Dashboard
-					</Link>
-				</div>
-			</header>
-
+			<AppHeader isAdmin={true} />
 			<main className="flex-1 p-4 md:p-6">
 				<div className="container mx-auto max-w-4xl">
 					<div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
@@ -235,61 +227,66 @@ export default function AdminCategoriesPage() {
 								Adicione, edite ou remova categorias de chamados
 							</p>
 						</div>
-						<Dialog
-							open={showNewCategoryDialog}
-							onOpenChange={setShowNewCategoryDialog}
-						>
-							<DialogTrigger asChild>
-								<Button className="mt-4 md:mt-0">
-									<Plus className="mr-2 h-4 w-4" />
-									Nova Categoria
-								</Button>
-							</DialogTrigger>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>Adicionar Nova Categoria</DialogTitle>
-									<DialogDescription>
-										Preencha os campos abaixo para criar uma nova categoria de
-										chamados.
-									</DialogDescription>
-								</DialogHeader>
-								<div className="space-y-4 py-4">
-									<div className="space-y-2">
-										<Label htmlFor="name">Nome da Categoria</Label>
-										<Input
-											id="name"
-											value={newCategoryName}
-											onChange={(e) => setNewCategoryName(e.target.value)}
-											placeholder="Ex: Suporte Técnico"
-										/>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="description">Descrição</Label>
-										<Textarea
-											id="description"
-											value={newCategoryComment}
-											onChange={(e) => setNewCategoryComment(e.target.value)}
-											placeholder="Descreva o propósito desta categoria"
-											rows={3}
-										/>
-									</div>
-								</div>
-								<DialogFooter>
-									<Button
-										variant="outline"
-										onClick={() => setShowNewCategoryDialog(false)}
-									>
-										Cancelar
+						<div className="flex flex-col md:flex-row gap-2 mt-4 md:mt-0">
+							<Button variant="default" onClick={() => router.push("/admin")}>
+								Voltar ao Dashboard
+							</Button>
+							<Dialog
+								open={showNewCategoryDialog}
+								onOpenChange={setShowNewCategoryDialog}
+							>
+								<DialogTrigger asChild>
+									<Button className="mt-2 md:mt-0">
+										<Plus className="mr-2 h-4 w-4" />
+										Nova Categoria
 									</Button>
-									<Button
-										onClick={handleCreateCategory}
-										disabled={isSubmitting}
-									>
-										{isSubmitting ? "Salvando..." : "Salvar Categoria"}
-									</Button>
-								</DialogFooter>
-							</DialogContent>
-						</Dialog>
+								</DialogTrigger>
+								<DialogContent>
+									<DialogHeader>
+										<DialogTitle>Adicionar Nova Categoria</DialogTitle>
+										<DialogDescription>
+											Preencha os campos abaixo para criar uma nova categoria de
+											chamados.
+										</DialogDescription>
+									</DialogHeader>
+									<div className="space-y-4 py-4">
+										<div className="space-y-2">
+											<Label htmlFor="name">Nome da Categoria</Label>
+											<Input
+												id="name"
+												value={newCategoryName}
+												onChange={(e) => setNewCategoryName(e.target.value)}
+												placeholder="Ex: Suporte Técnico"
+											/>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="description">Descrição</Label>
+											<Textarea
+												id="description"
+												value={newCategoryComment}
+												onChange={(e) => setNewCategoryComment(e.target.value)}
+												placeholder="Descreva o propósito desta categoria"
+												rows={3}
+											/>
+										</div>
+									</div>
+									<DialogFooter>
+										<Button
+											variant="outline"
+											onClick={() => setShowNewCategoryDialog(false)}
+										>
+											Cancelar
+										</Button>
+										<Button
+											onClick={handleCreateCategory}
+											disabled={isSubmitting}
+										>
+											{isSubmitting ? "Salvando..." : "Salvar Categoria"}
+										</Button>
+									</DialogFooter>
+								</DialogContent>
+							</Dialog>
+						</div>
 					</div>
 
 					<Card>

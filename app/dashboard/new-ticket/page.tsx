@@ -4,8 +4,7 @@ import type React from "react";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, User, Paperclip } from "lucide-react";
+import { User, Paperclip } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +37,7 @@ import {
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
 import { notificationService } from "@/lib/notification-service";
+import { AppHeader } from "@/components/app-header";
 
 export default function NewTicketPage() {
 	const router = useRouter();
@@ -173,18 +173,7 @@ export default function NewTicketPage() {
 
 	return (
 		<div className="flex min-h-screen flex-col">
-			<header className="sticky top-0 z-10 border-b bg-background">
-				<div className="container flex h-16 items-center px-4 md:px-6">
-					<Link
-						href="/dashboard"
-						className="flex items-center gap-2 font-semibold"
-					>
-						<ArrowLeft className="h-5 w-5" />
-						Voltar para Dashboard
-					</Link>
-				</div>
-			</header>
-
+			<AppHeader />
 			<main className="flex-1 p-4 md:p-6">
 				<div className="container mx-auto max-w-3xl">
 					<div className="mb-6">

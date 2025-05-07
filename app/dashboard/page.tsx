@@ -3,10 +3,8 @@
 import type React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LogOut, Plus, Search, User } from "lucide-react";
+import { Plus, Search, User } from "lucide-react";
 import { toast } from "sonner";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -16,14 +14,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -49,7 +39,6 @@ import {
 	type GLPIGroup,
 	GLPIError,
 } from "@/lib/glpi-api";
-import { NotificationBell } from "@/components/notification-bell";
 import { TicketSkeleton } from "@/components/dashboard/ticket-skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { PriorityIndicator } from "@/components/priority-indicator";
@@ -59,6 +48,8 @@ import { FileInput } from "@/components/file-input";
 // Importar as funções de validação
 import { ticketSchema, validateData } from "@/lib/validation";
 import { Checkbox } from "@/components/ui/checkbox";
+// Importar o componente AppHeader
+import { AppHeader } from "@/components/app-header";
 
 export default function DashboardPage() {
 	const { user, isLoading: authLoading, logout } = useAuth();
@@ -369,52 +360,8 @@ export default function DashboardPage() {
 	// Renderiza o conteúdo real quando estiver carregado
 	return (
 		<div className="flex min-h-screen flex-col">
-			<header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
-				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
-					<div className="flex items-center gap-2">
-						<img
-							src="/puc-goias.svg"
-							alt="Logo CEAD PUC GO"
-							className="h-8 w-8"
-						/>
-						<span className="text-lg font-semibold">CEAD - PUC GO</span>
-					</div>
-					<div className="flex items-center gap-4">
-						<NotificationBell />
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="flex items-center gap-2 text-white hover:bg-white/10"
-								>
-									<Avatar className="h-8 w-8">
-										<AvatarImage src="/diverse-avatars.png" alt="Avatar" />
-										<AvatarFallback>
-											{user?.email ? getEmailInitial(user.email) : "U"}
-										</AvatarFallback>
-									</Avatar>
-									<span className="hidden md:inline-flex">
-										{user?.email || "Usuário"}
-									</span>
-									<ChevronDown className="h-4 w-4" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem>
-									<User className="mr-2 h-4 w-4" />
-									Perfil
-								</DropdownMenuItem>
-								<DropdownMenuItem onClick={logout}>
-									<LogOut className="mr-2 h-4 w-4" />
-									Sair
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</div>
-				</div>
-			</header>
+			<AppHeader />
+
 			<main className="flex-1 p-4 md:p-6">
 				<div className="container mx-auto grid gap-6">
 					<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -892,7 +839,7 @@ export default function DashboardPage() {
 							Termos de Uso
 						</a>
 						<a
-							href="/politica-de-privicidade"
+							href="/politica-de-privacidade"
 							className="text-sm text-muted-foreground hover:underline"
 						>
 							Política de Privacidade

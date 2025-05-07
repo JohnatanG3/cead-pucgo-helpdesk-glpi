@@ -29,7 +29,6 @@ export function AppHeader({ isAdmin = false }: AppHeaderProps) {
   // Determinar o link e o texto do cabeçalho com base no tipo de usuário
   const headerLink = isAdmin ? "/admin" : "/dashboard"
   const headerText = isAdmin ? "CEAD - PUC GO (Admin)" : "CEAD - PUC GO"
-  const defaultName = isAdmin ? "Administrador" : "Usuário"
 
   return (
     <header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
@@ -49,7 +48,7 @@ export function AppHeader({ isAdmin = false }: AppHeaderProps) {
                 <Avatar className="h-8 w-8">
                   <AvatarFallback>{avatarInitial}</AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline-flex">{user?.name || defaultName}</span>
+                <span className="hidden md:inline-flex">{user?.email || (isAdmin ? "Administrador" : "Usuário")}</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
