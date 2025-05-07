@@ -1,16 +1,11 @@
 "use client";
 
-import {
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LogOut, Search, User } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { toast } from "sonner";
-
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -20,12 +15,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -36,8 +25,8 @@ import {
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
 import { PriorityIndicator } from "@/components/priority-indicator";
-import { getEmailInitial } from "@/lib/utils";
 import { FilterDropdown } from "@/components/filter-dropdown";
+import { AppHeader } from "@/components/app-header";
 
 export default function TicketsPage() {
 	const { user, isLoading: authLoading, logout } = useAuth();
@@ -155,6 +144,11 @@ export default function TicketsPage() {
 		return date.toLocaleDateString("pt-BR");
 	};
 
+	// Função para criar novo chamado
+	const handleNewTicket = () => {
+		router.push("/dashboard/new-ticket");
+	};
+
 	// Renderizar cards para visualização mobile
 	const renderTicketCard = (ticket: GLPITicket) => (
 		<div key={ticket.id} className="mb-4 rounded-lg border p-4 shadow-sm">
@@ -247,50 +241,7 @@ export default function TicketsPage() {
 
 	return (
 		<div className="flex min-h-screen flex-col">
-			<header className="sticky top-0 z-10 border-b bg-cead-blue text-white">
-				<div className="container flex h-16 items-center justify-between px-4 md:px-6">
-					<div className="flex items-center gap-2">
-						<img
-							src="/puc-goias.svg"
-							alt="Logo CEAD PUC GO"
-							className="h-8 w-8"
-						/>
-						<span className="text-lg font-semibold">CEAD - PUC GO</span>
-					</div>
-					<div className="flex items-center gap-4">
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="flex items-center gap-2 text-white hover:bg-white/10"
-								>
-									<Avatar className="h-8 w-8">
-										<AvatarFallback>
-											{user?.email ? getEmailInitial(user.email) : "U"}
-										</AvatarFallback>
-									</Avatar>
-									<span className="hidden md:inline-flex">
-										{user?.name || "Usuário"}
-									</span>
-									<ChevronDown className="h-4 w-4" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem>
-									<User className="mr-2 h-4 w-4" />
-									Perfil
-								</DropdownMenuItem>
-								<DropdownMenuItem onClick={logout}>
-									<LogOut className="mr-2 h-4 w-4" />
-									Sair
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</div>
-				</div>
-			</header>
+			<AppHeader />
 
 			<main className="flex-1 p-4 md:p-6">
 				<div className="container mx-auto grid gap-6">
@@ -318,6 +269,14 @@ export default function TicketsPage() {
 								className="w-full sm:w-auto"
 							>
 								Voltar ao Dashboard
+							</Button>
+							<Button
+								variant="default"
+								onClick={handleNewTicket}
+								className="w-full sm:w-auto bg-cead-blue hover:bg-cead-blue/90"
+							>
+								<Plus className="mr-2 h-4 w-4" />
+								Novo Chamado
 							</Button>
 						</div>
 					</div>

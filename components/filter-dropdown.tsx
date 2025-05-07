@@ -24,7 +24,7 @@ export function FilterDropdown({ children, buttonLabel = "Filtrar" }: FilterDrop
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[280px]">
-        <div className="max-h-[400px] overflow-y-auto overflow-x-hidden pr-2">{children}</div>
+        <div className="max-h-[60vh] overflow-y-auto">{children}</div>
       </DropdownMenuContent>
     </DropdownMenu>
   )

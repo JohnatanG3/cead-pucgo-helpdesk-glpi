@@ -2,10 +2,10 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User } from "lucide-react";
+import { ArrowLeft, User, Paperclip } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,7 @@ import { RichTextEditor } from "@/components/rich-text-editor";
 import { FileInput } from "@/components/file-input";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { ErrorMessage } from "@/components/error-message";
+import { PriorityIndicator } from "@/components/priority-indicator";
 import {
 	createTicket,
 	uploadDocument,
@@ -54,8 +55,8 @@ export default function NewTicketPage() {
 	const [categories, setCategories] = useState<any[]>([]);
 	const [error, setError] = useState<string | null>(null);
 
-	// Carregar categorias
-	useState(() => {
+	// Carregar categorias - corrigido para usar useEffect
+	useEffect(() => {
 		handleApiRequest(
 			() => getCategories(),
 			"Não foi possível carregar as categorias",
@@ -66,7 +67,7 @@ export default function NewTicketPage() {
 			.finally(() => {
 				setIsLoadingCategories(false);
 			});
-	});
+	}, []); // Array de dependências vazio para executar apenas uma vez na montagem
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -158,6 +159,16 @@ export default function NewTicketPage() {
 
 	const handleRemoveFile = (index: number) => {
 		setFiles((prev) => prev.filter((_, i) => i !== index));
+	};
+
+	// Renderizar o conteúdo personalizado para o SelectValue
+	const renderPriorityValue = () => {
+		if (!priority)
+			return (
+				<span className="text-muted-foreground">Selecione a prioridade</span>
+			);
+
+		return <PriorityIndicator priority={Number(priority)} />;
 	};
 
 	return (
@@ -252,14 +263,20 @@ export default function NewTicketPage() {
 											onValueChange={setPriority}
 											disabled={isLoading}
 										>
-											<SelectTrigger>
-												<SelectValue placeholder="Selecione a prioridade" />
-											</SelectTrigger>
+											<SelectTrigger>{renderPriorityValue()}</SelectTrigger>
 											<SelectContent>
-												<SelectItem value="1">Baixa</SelectItem>
-												<SelectItem value="2">Média</SelectItem>
-												<SelectItem value="3">Alta</SelectItem>
-												<SelectItem value="4">Urgente</SelectItem>
+												<SelectItem value="1">
+													<PriorityIndicator priority={1} />
+												</SelectItem>
+												<SelectItem value="2">
+													<PriorityIndicator priority={2} />
+												</SelectItem>
+												<SelectItem value="3">
+													<PriorityIndicator priority={3} />
+												</SelectItem>
+												<SelectItem value="4">
+													<PriorityIndicator priority={4} />
+												</SelectItem>
 											</SelectContent>
 										</Select>
 									</div>
@@ -291,7 +308,7 @@ export default function NewTicketPage() {
 									/>
 								</div>
 
-								<div className="space-y-2">
+								<div className="space-y-2 mb-6">
 									{/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
 									<label className="text-sm font-medium">
 										Anexos (opcional)
@@ -304,16 +321,33 @@ export default function NewTicketPage() {
 										multiple
 										selectedFiles={files}
 										onRemove={handleRemoveFile}
+										buttonLabel="Selecionar arquivo"
+										buttonClassName="bg-cead-blue text-white hover:bg-cead-blue/90"
+										buttonIcon={<Paperclip className="mr-2 h-4 w-4" />}
 									/>
 								</div>
 							</CardContent>
 
-							<CardFooter>
-								<Button type="submit" className="w-full" disabled={isLoading}>
+							<CardFooter className="flex justify-between gap-4 pt-6 border-t">
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => router.push("/dashboard")}
+									disabled={isLoading}
+									className="w-1/3"
+								>
+									Cancelar
+								</Button>
+								<Button
+									type="submit"
+									variant="default"
+									disabled={isLoading}
+									className="w-2/3 bg-cead-blue hover:bg-cead-blue/90"
+								>
 									{isLoading ? (
 										<LoadingSpinner size="sm" text="Enviando chamado..." />
 									) : (
-										"Enviar Chamado"
+										"Criar Chamado"
 									)}
 								</Button>
 							</CardFooter>
