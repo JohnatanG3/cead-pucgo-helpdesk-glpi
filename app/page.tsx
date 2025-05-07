@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { authenticateWithGLPI } from "@/lib/auth-glpi"
 import { useAuth } from "@/contexts/auth-context"
+import { getNameFromEmail } from "@/lib/utils"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -61,8 +62,14 @@ export default function LoginPage() {
         return
       }
 
-      // Mostrar mensagem de sucesso
-      toast.success(`Bem-vindo, ${result.user.name}!`)
+      // Obter um nome amigável do email ou usar o nome do usuário se disponível
+      const displayName =
+        result.user.name !== "Usuário" && result.user.name !== "Administrador"
+          ? result.user.name
+          : getNameFromEmail(result.user.email)
+
+      // Mostrar mensagem de sucesso com o nome extraído do email
+      toast.success(`Bem-vindo, ${displayName}!`)
 
       // Usar a função de login do contexto de autenticação
       login(result.user, result.sessionToken || "")

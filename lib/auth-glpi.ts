@@ -1,4 +1,5 @@
 // Arquivo simplificado para autenticação em desenvolvimento
+import { getNameFromEmail } from "./utils";
 
 // Interface para o retorno da função de autenticação
 interface AuthResult {
@@ -42,6 +43,9 @@ export async function authenticateWithGLPI(
 		// Determina o papel do usuário com base no email
 		const isAdmin = username.includes("admin") || username.includes("suporte");
 
+		// Gera um nome amigável a partir do email
+		const friendlyName = getNameFromEmail(username);
+
 		// Atribui um grupo para usuários de suporte
 		const groupId = username.includes("suporte") ? "1" : undefined;
 
@@ -51,7 +55,7 @@ export async function authenticateWithGLPI(
 			sessionToken: "dev-session-token-" + Date.now(),
 			user: {
 				id: "1",
-				name: isAdmin ? "Administrador" : "Usuário",
+				name: friendlyName,
 				email: username,
 				role: isAdmin ? "admin" : "user",
 				group_id: groupId,
