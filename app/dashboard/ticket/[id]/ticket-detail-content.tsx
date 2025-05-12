@@ -759,7 +759,7 @@ export default function TicketDetailContent({
 										onChange={handleFileChange}
 										disabled={isSubmitting}
 										accept="*/*" // Aceita todos os tipos de arquivos
-										buttonText="Anexar arquivo"
+										buttonLabel="Anexar arquivo"
 										selectedFiles={file ? [file] : []} // Convertendo o único arquivo em um array
 									/>
 									{file && (
@@ -937,7 +937,7 @@ export default function TicketDetailContent({
 									disabled={isEditing}
 									accept="*/*"
 									multiple
-									buttonText="Selecionar arquivos"
+									buttonLabel="Selecionar arquivos"
 								/>
 
 								{newFiles.length > 0 && (

@@ -590,7 +590,7 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 													e.target.value = "";
 												}
 											}}
-											buttonText="Anexar arquivos"
+											buttonLabel="Anexar arquivos"
 											accept="*/*" // Aceita todos os tipos de arquivos
 											multiple
 											selectedFiles={selectedFiles}
@@ -762,7 +762,7 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 									disabled={isEditing}
 									accept="*/*"
 									multiple
-									buttonText="Selecionar arquivos"
+									buttonLabel="Selecionar arquivos"
 								/>
 
 								{newFiles.length > 0 && (
