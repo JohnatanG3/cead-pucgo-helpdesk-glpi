@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -102,12 +102,12 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 	const [isDeletingDocument, setIsDeletingDocument] = useState(false);
 
 	// Carregar followups ao montar o componente
-	useState(() => {
+	useEffect(() => {
 		if (ticket?.id) {
 			loadFollowups();
 			loadTicketDocuments(ticket.id);
 		}
-	});
+	}, [ticket?.id]);
 
 	// Carregar followups do ticket
 	async function loadFollowups() {
@@ -356,7 +356,7 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 
 	return (
 		<div className="flex min-h-screen flex-col">
-			<AppHeader />
+			<AppHeader isAdmin={true} />
 
 			<main className="flex-1 p-4 md:p-6">
 				<div className="container mx-auto max-w-4xl">
