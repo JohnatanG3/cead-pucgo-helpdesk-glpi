@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, Paperclip } from "lucide-react";
+import { User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +38,7 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { notificationService } from "@/lib/notification-service";
 import { AppHeader } from "@/components/app-header";
+import { Label } from "@/components/ui/label";
 
 export default function NewTicketPage() {
 	const router = useRouter();
@@ -54,6 +55,7 @@ export default function NewTicketPage() {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const [categories, setCategories] = useState<any[]>([]);
 	const [error, setError] = useState<string | null>(null);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Carregar categorias - corrigido para usar useEffect
 	useEffect(() => {
@@ -94,7 +96,7 @@ export default function NewTicketPage() {
 			return;
 		}
 
-		setIsLoading(true);
+		setIsSubmitting(true);
 
 		try {
 			// Criar o chamado
@@ -145,7 +147,7 @@ export default function NewTicketPage() {
 			console.error("Erro ao criar chamado:", error);
 			// O erro já foi tratado pelo handleApiRequest
 		} finally {
-			setIsLoading(false);
+			setIsSubmitting(false);
 		}
 	};
 
@@ -297,24 +299,25 @@ export default function NewTicketPage() {
 									/>
 								</div>
 
-								<div className="space-y-2 mb-6">
-									{/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
-									<label className="text-sm font-medium">
-										Anexos (opcional)
-									</label>
+								<div className="space-y-2">
+									<Label htmlFor="attachment">Anexos (opcional)</Label>
 									<FileInput
 										id="attachment"
 										onChange={handleFileChange}
-										disabled={isLoading}
-										accept="*/*"
+										disabled={isSubmitting}
+										accept="*/*" // Aceita todos os tipos de arquivos
 										multiple
 										selectedFiles={files}
 										onRemove={handleRemoveFile}
 										buttonLabel="Selecionar arquivo"
-										buttonClassName="bg-cead-blue text-white hover:bg-cead-blue/90"
-										buttonIcon={<Paperclip className="mr-2 h-4 w-4" />}
 									/>
+									<p className="text-xs text-muted-foreground">
+										Todos os tipos de arquivos são aceitos (máx. 5MB por
+										arquivo)
+									</p>
 								</div>
+								{/* Remova ou comente esta linha: */}
+								{/* {files.length > 0 && <FileAttachment files={files} onRemove={handleRemoveFile} className="mt-2" />} */}
 							</CardContent>
 
 							<CardFooter className="flex justify-between gap-4 pt-6 border-t">

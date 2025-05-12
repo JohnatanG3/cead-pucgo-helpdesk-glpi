@@ -42,7 +42,6 @@ import {
 import { TicketSkeleton } from "@/components/dashboard/ticket-skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { PriorityIndicator } from "@/components/priority-indicator";
-import { FileAttachment } from "@/components/file-attachment";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { FileInput } from "@/components/file-input";
 // Importar as funções de validação
@@ -694,14 +693,9 @@ export default function DashboardPage() {
 											accept="*/*" // Aceita todos os tipos de arquivos
 											multiple
 											selectedFiles={files}
+											onRemove={handleRemoveFile}
+											buttonLabel="Selecionar arquivo"
 										/>
-										{files.length > 0 && (
-											<FileAttachment
-												files={files}
-												onRemove={handleRemoveFile}
-												className="mt-2"
-											/>
-										)}
 										<p className="text-xs text-muted-foreground">
 											Todos os tipos de arquivos são aceitos (máx. 5MB por
 											arquivo)
