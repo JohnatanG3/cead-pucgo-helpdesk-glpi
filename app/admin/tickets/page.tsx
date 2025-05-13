@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Search } from "lucide-react";
+import { ArrowLeft, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
 	getTickets,
 	mapGLPIStatusToString,
 	mapGLPIPriorityToString,
+	deleteTicket,
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
 import { BugIcon } from "@/components/icons/bug-icon";
@@ -216,6 +217,32 @@ export default function AdminTicketsPage() {
 				>
 					<BugIcon className="mr-2 h-4 w-4" />
 					Debug
+				</Button>
+				<Button
+					variant="destructive"
+					size="sm"
+					onClick={() => {
+						// Implemente a lógica de exclusão aqui
+						if (
+							window.confirm(
+								`Tem certeza que deseja excluir o chamado #${ticket.id}?`,
+							)
+						) {
+							deleteTicket(ticket.id)
+								.then(() => {
+									toast.success("Chamado excluído com sucesso!");
+									// Recarregar a lista de chamados
+									router.refresh();
+								})
+								.catch((error) => {
+									console.error("Erro ao excluir chamado:", error);
+									toast.error("Não foi possível excluir o chamado.");
+								});
+						}
+					}}
+				>
+					<Trash2 className="h-4 w-4" />
+					<span className="sr-only">Excluir</span>
 				</Button>
 			</div>
 		</div>

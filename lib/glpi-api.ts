@@ -287,8 +287,7 @@ async function fetchWithRetry<T>(
 					retries++;
 					// Espera exponencial antes de tentar novamente
 					await new Promise((resolve) =>
-						// biome-ignore lint/style/useExponentiationOperator: <explanation>
-						setTimeout(resolve, 1000 * Math.pow(2, retries)),
+						setTimeout(resolve, 1000 * 2 ** retries),
 					);
 					continue;
 				}
@@ -322,10 +321,7 @@ async function fetchWithRetry<T>(
 
 			retries++;
 			// Espera exponencial antes de tentar novamente
-			await new Promise((resolve) =>
-				// biome-ignore lint/style/useExponentiationOperator: <explanation>
-				setTimeout(resolve, 1000 * Math.pow(2, retries)),
-			);
+			await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** retries));
 		}
 	}
 
@@ -696,6 +692,28 @@ export async function updateTicket(
 
 	// Invalida todos os caches relacionados a tickets
 	cacheManager.invalidatePattern(/^tickets:/);
+}
+
+// Função para excluir um ticket
+export async function deleteTicket(id: number): Promise<void> {
+	try {
+		// Em ambiente de desenvolvimento, simular exclusão
+		if (process.env.NODE_ENV === "development") {
+			console.log(`Simulando exclusão do ticket ${id}`);
+			return;
+		}
+
+		// Em produção, excluir da API
+		await fetchGLPI(`Ticket/${id}`, {
+			method: "DELETE",
+		});
+
+		// Invalida todos os caches relacionados a tickets
+		cacheManager.invalidatePattern(/^tickets:/);
+	} catch (error) {
+		console.error(`Erro ao excluir ticket ${id}:`, error);
+		throw error;
+	}
 }
 
 // Funções para followups (comentários em tickets)

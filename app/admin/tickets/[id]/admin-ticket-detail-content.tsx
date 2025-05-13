@@ -14,6 +14,7 @@ import {
 	Trash2,
 	Paperclip,
 	X,
+	AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +40,7 @@ import {
 	linkDocumentToTicket,
 	getTicketDocuments,
 	deleteDocument,
+	deleteTicket,
 } from "@/lib/glpi-api";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -58,6 +60,16 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { AppHeader } from "@/components/app-header";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Interface para documentos
 interface Document {
@@ -100,6 +112,10 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 	const [newFiles, setNewFiles] = useState<File[]>([]);
 	const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
 	const [isDeletingDocument, setIsDeletingDocument] = useState(false);
+
+	// Estado para o diálogo de confirmação de exclusão
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	// Carregar followups ao montar o componente
 	useEffect(() => {
@@ -282,6 +298,25 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 		}
 	};
 
+	// Função para excluir o chamado
+	const handleDeleteTicket = async () => {
+		if (!ticket) return;
+
+		setIsDeleting(true);
+
+		try {
+			await deleteTicket(ticket.id);
+			toast.success("Chamado excluído com sucesso!");
+			router.push("/admin/tickets");
+		} catch (error) {
+			console.error("Erro ao excluir chamado:", error);
+			toast.error("Não foi possível excluir o chamado.");
+		} finally {
+			setIsDeleting(false);
+			setIsDeleteDialogOpen(false);
+		}
+	};
+
 	// Formatar data
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
@@ -388,6 +423,15 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 												<Edit2 className="h-4 w-4" />
 												<span>Editar</span>
 											</Button>
+											<Button
+												variant="destructive"
+												size="sm"
+												onClick={() => setIsDeleteDialogOpen(true)}
+												className="flex items-center gap-1"
+											>
+												<Trash2 className="h-4 w-4" />
+												<span>Excluir</span>
+											</Button>
 										</div>
 										<CardDescription>{ticket.name}</CardDescription>
 									</div>
@@ -435,7 +479,7 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 							</CardContent>
 						</Card>
 
-						{/* Histórico de respostas - Removido conforme solicitado */}
+						{/* Histórico de respostas */}
 						{followups.length > 0 && (
 							<Card>
 								<CardHeader>
@@ -825,6 +869,51 @@ export function AdminTicketDetailContent({ ticket }: { ticket: any }) {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			{/* Diálogo de confirmação de exclusão */}
+			<AlertDialog
+				open={isDeleteDialogOpen}
+				onOpenChange={setIsDeleteDialogOpen}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Excluir Chamado</AlertDialogTitle>
+						<AlertDialogDescription>
+							<div className="flex flex-col gap-2">
+								<div className="flex items-center gap-2 text-amber-600">
+									<AlertTriangle className="h-5 w-5" />
+									<span className="font-medium">
+										Esta ação não pode ser desfeita.
+									</span>
+								</div>
+								<p>
+									Tem certeza que deseja excluir permanentemente o chamado #
+									{ticket.id} - {ticket.name}?
+								</p>
+								<p>
+									Todos os dados relacionados a este chamado, incluindo
+									respostas e anexos, serão excluídos.
+								</p>
+							</div>
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isDeleting}>
+							Cancelar
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={(e) => {
+								e.preventDefault();
+								handleDeleteTicket();
+							}}
+							disabled={isDeleting}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							{isDeleting ? "Excluindo..." : "Excluir Chamado"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 
 			<footer className="border-t py-4">
 				<div className="container flex flex-col items-center justify-between gap-4 px-4 md:flex-row md:px-6">
