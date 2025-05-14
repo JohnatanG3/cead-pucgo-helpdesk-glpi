@@ -2,149 +2,147 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { ArrowRight } from "lucide-react"
-import { toast } from "sonner"
-
+import { useState } from "react"
+import { signIn } from "next-auth/react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { authenticateWithGLPI } from "@/lib/auth-glpi"
-import { useAuth } from "@/contexts/auth-context"
-import { getNameFromEmail } from "@/lib/utils"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { LoadingSpinner } from "@/components/loading-spinner"
+import Image from "next/image"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const emailInputRef = useRef<HTMLInputElement>(null)
+  const [error, setError] = useState("")
+
+  const searchParams = useSearchParams()
   const router = useRouter()
-  const { user, login } = useAuth()
 
-  // Redirecionar se já estiver autenticado
-  useEffect(() => {
-    if (user) {
-      if (user.role === "admin") {
-        router.push("/admin")
-      } else {
-        router.push("/dashboard")
-      }
+  // Verificar se há erro na URL
+  const errorParam = searchParams.get("error")
+
+  // Mapear erros de autenticação
+  const errorMessages: Record<string, string> = {
+    CredentialsSignin: "Usuário ou senha inválidos.",
+    session_expired: "Sua sessão expirou. Por favor, faça login novamente.",
+    default: "Ocorreu um erro durante o login. Tente novamente.",
+  }
+
+  // Definir mensagem de erro com base no parâmetro
+  useState(() => {
+    if (errorParam) {
+      setError(errorMessages[errorParam] || errorMessages.default)
     }
-  }, [user, router])
+  })
 
-  // Focar no campo de e-mail quando a página carregar
-  useEffect(() => {
-    // Pequeno atraso para garantir que o componente esteja totalmente renderizado
-    const timer = setTimeout(() => {
-      if (emailInputRef.current) {
-        emailInputRef.current.focus()
-      }
-    }, 100)
-
-    return () => clearTimeout(timer)
-  }, [])
-
+  // Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+
+    if (!username || !password) {
+      setError("Por favor, preencha todos os campos.")
+      return
+    }
 
     try {
-      // Autenticar usando nossa função
-      const result = await authenticateWithGLPI(email, password)
+      setIsLoading(true)
+      setError("")
 
-      if (!result.success || !result.user) {
-        // Mostrar mensagem de erro
-        toast.error(result.error || "Email ou senha incorretos")
-        setIsLoading(false)
-        return
+      const result = await signIn("credentials", {
+        username,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError(errorMessages[result.error] || errorMessages.default)
+      } else if (result?.ok) {
+        // Redirecionar para a página apropriada após login bem-sucedido
+        // O middleware cuidará do redirecionamento com base no tipo de usuário
+        router.push("/dashboard")
+        router.refresh()
       }
-
-      // Obter um nome amigável do email ou usar o nome do usuário se disponível
-      const displayName =
-        result.user.name !== "Usuário" && result.user.name !== "Administrador"
-          ? result.user.name
-          : getNameFromEmail(result.user.email)
-
-      // Mostrar mensagem de sucesso com o nome extraído do email
-      toast.success(`Bem-vindo, ${displayName}!`)
-
-      // Usar a função de login do contexto de autenticação
-      login(result.user, result.sessionToken || "")
-
-      // Não precisamos fazer o redirecionamento aqui, pois a função login já fará isso
-    } catch (error) {
-      console.error("Erro ao fazer login:", error)
-      toast.error("Ocorreu um erro ao tentar fazer login. Tente novamente.")
+    } catch (err) {
+      setError("Ocorreu um erro durante o login. Tente novamente.")
+      console.error("Erro de login:", err)
+    } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
-      <div className="mb-8 flex flex-col items-center">
-        <img src="/puc-goias.svg" alt="Logo CEAD PUC GO" className="h-30 w-30 mb-4" />
-        <h1 className="text-2xl font-bold text-slate-900">CEAD - PUC GO</h1>
-        <p className="text-slate-600">Sistema de Abertura de Chamados</p>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <Image src="/puc-goias.svg" alt="Logo PUC Goiás" width={200} height={80} className="mx-auto mb-6" />
+          <h1 className="text-3xl font-bold">Sistema de Chamados CEAD</h1>
+          <p className="text-gray-600 mt-2">Coordenação de Educação a Distância</p>
+        </div>
 
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-xl">Acesso ao Sistema</CardTitle>
-          <CardDescription>Entre com suas credenciais para acessar o sistema de chamados.</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu.email@pucgoias.edu.br"
-                required
-                ref={emailInputRef}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                autoFocus
-              />
-              <p className="text-xs text-muted-foreground">
-                Dica: Use um email com "admin" ou "suporte" para acessar o painel administrativo.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Senha</Label>
+        <Card>
+          <CardHeader>
+            <CardTitle>Acesso ao Sistema</CardTitle>
+            <CardDescription>Entre com suas credenciais institucionais da PUC Goiás</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="username" className="text-sm font-medium">
+                  Usuário
+                </label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Seu usuário PUC"
+                  disabled={isLoading}
+                  required
+                />
               </div>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-              <div className="flex justify-end">
-                <Link href="#" className="text-sm text-primary hover:underline">
-                  Esqueceu a senha?
-                </Link>
+
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Senha
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Sua senha"
+                  disabled={isLoading}
+                  required
+                />
               </div>
-            </div>
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <LoadingSpinner className="mr-2" />
+                    Entrando...
+                  </>
+                ) : (
+                  "Entrar"
+                )}
+              </Button>
+            </form>
           </CardContent>
-          <CardFooter>
-            <Button
-              type="submit"
-              className="w-full bg-cead-blue hover:bg-cead-light-blue text-white"
-              disabled={isLoading}
-            >
-              {isLoading ? "Entrando..." : "Entrar"}
-              {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
-            </Button>
+          <CardFooter className="flex flex-col space-y-2 text-sm text-gray-600">
+            <p>Use suas credenciais institucionais da PUC Goiás para acessar o sistema.</p>
+            <p>Em caso de problemas, entre em contato com o suporte do CEAD.</p>
           </CardFooter>
-        </form>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

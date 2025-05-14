@@ -1,0 +1,57 @@
+export const GLPI_CONFIG = {
+  API_URL: process.env.GLPI_API_URL || "https://glpi.pucgo.edu.br/apirest.php",
+  APP_TOKEN: process.env.GLPI_APP_TOKEN || "",
+  USER_TOKEN: process.env.GLPI_USER_TOKEN || "",
+  DEFAULT_TIMEOUT: 30000, // 30 segundos
+  CACHE_TTL: 300, // 5 minutos em segundos
+  MAX_RETRIES: 3,
+  RETRY_DELAY: 1000, // 1 segundo
+  ENDPOINTS: {
+    initSession: "/initSession",
+    killSession: "/killSession",
+    getTicket: "/Ticket/:id",
+    getTickets: "/Ticket",
+    createTicket: "/Ticket",
+    updateTicket: "/Ticket/:id",
+    deleteTicket: "/Ticket/:id",
+    getUser: "/User/:id",
+    getUsers: "/User",
+    getCategory: "/ITILCategory/:id",
+    getCategories: "/ITILCategory",
+    getAttachment: "/Document/:id",
+    getAttachments: "/Document",
+    uploadAttachment: "/Document",
+    getTicketHistory: "/Ticket/:id/Log",
+  },
+  STATUS_MAPPING: {
+    1: "Novo",
+    2: "Em Andamento (Atribuído)",
+    3: "Em Andamento (Planejado)",
+    4: "Pendente",
+    5: "Resolvido",
+    6: "Fechado",
+    7: "Cancelado",
+  },
+  PRIORITY_MAPPING: {
+    1: "Muito Baixa",
+    2: "Baixa",
+    3: "Média",
+    4: "Alta",
+    5: "Muito Alta",
+    6: "Crítica",
+  },
+  URGENCY_MAPPING: {
+    1: "Muito Baixa",
+    2: "Baixa",
+    3: "Média",
+    4: "Alta",
+    5: "Muito Alta",
+  },
+  IMPACT_MAPPING: {
+    1: "Muito Baixo",
+    2: "Baixo",
+    3: "Médio",
+    4: "Alto",
+    5: "Muito Alto",
+  },
+}

@@ -1,145 +1,181 @@
-import { toast } from "sonner";
+import { errorHandler } from "./error-handler"
 
-type NotificationType = "info" | "success" | "warning" | "error";
-
-interface Notification {
-	id: string;
-	title: string;
-	message: string;
-	type: NotificationType;
-	timestamp: Date;
-	read: boolean;
-	link?: string;
+// Interface para notificações
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  timestamp: string
+  read: boolean
+  type: "info" | "warning" | "success" | "error"
+  link?: string
+  userId: string
+  relatedItemId?: string
+  relatedItemType?: string
 }
 
-class NotificationService {
-	private notifications: Notification[] = [];
-	private listeners: Set<(notifications: Notification[]) => void> = new Set();
+// Cache local para notificações
+let notificationsCache: Notification[] = []
+let listeners: Array<(notifications: Notification[]) => void> = []
 
-	// Adiciona uma nova notificação
-	addNotification(
-		title: string,
-		message: string,
-		type: NotificationType = "info",
-		link?: string,
-	): Notification {
-		const notification: Notification = {
-			id: crypto.randomUUID(),
-			title,
-			message,
-			type,
-			timestamp: new Date(),
-			read: false,
-			link,
-		};
+// Simular alguns dados para desenvolvimento
+const mockNotifications: Notification[] = [
+  {
+    id: "1",
+    title: "Novo chamado atribuído",
+    message: "Um novo chamado foi atribuído a você",
+    timestamp: new Date().toISOString(),
+    read: false,
+    type: "info",
+    userId: "1",
+    link: "/admin/tickets/1",
+  },
+  {
+    id: "2",
+    title: "Chamado atualizado",
+    message: "O chamado #2 foi atualizado por um administrador",
+    timestamp: new Date(Date.now() - 3600000).toISOString(),
+    read: true,
+    type: "info",
+    userId: "1",
+    link: "/admin/tickets/2",
+  },
+  {
+    id: "3",
+    title: "Prazo expirando",
+    message: "O prazo para resolução do chamado #3 está expirando",
+    timestamp: new Date(Date.now() - 7200000).toISOString(),
+    read: false,
+    type: "warning",
+    userId: "1",
+    link: "/admin/tickets/3",
+  },
+]
 
-		this.notifications.unshift(notification);
+// Inicializar o cache com dados simulados
+notificationsCache = [...mockNotifications]
 
-		// Limita a 50 notificações
-		if (this.notifications.length > 50) {
-			this.notifications = this.notifications.slice(0, 50);
-		}
-
-		// Notifica os ouvintes
-		this.notifyListeners();
-
-		// Mostra um toast para notificação imediata
-		toast[type](title, {
-			description: message,
-			action: link
-				? {
-						label: "Ver",
-						// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-						onClick: () => (window.location.href = link),
-					}
-				: undefined,
-		});
-
-		return notification;
-	}
-
-	// Marca uma notificação como lida
-	markAsRead(id: string): void {
-		const notification = this.notifications.find((n) => n.id === id);
-		if (notification) {
-			notification.read = true;
-			this.notifyListeners();
-		}
-	}
-
-	// Marca todas as notificações como lidas
-	markAllAsRead(): void {
-		// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-		// biome-ignore lint/complexity/noForEach: <explanation>
-		this.notifications.forEach((n) => (n.read = true));
-		this.notifyListeners();
-	}
-
-	// Obtém todas as notificações
-	getNotifications(): Notification[] {
-		return [...this.notifications];
-	}
-
-	// Obtém apenas notificações não lidas
-	getUnreadNotifications(): Notification[] {
-		return this.notifications.filter((n) => !n.read);
-	}
-
-	// Adiciona um ouvinte para mudanças nas notificações
-	subscribe(listener: (notifications: Notification[]) => void): () => void {
-		this.listeners.add(listener);
-
-		// Retorna uma função para cancelar a inscrição
-		return () => {
-			this.listeners.delete(listener);
-		};
-	}
-
-	// Notifica todos os ouvintes
-	private notifyListeners(): void {
-		const notifications = this.getNotifications();
-		// biome-ignore lint/complexity/noForEach: <explanation>
-		this.listeners.forEach((listener) => listener(notifications));
-	}
-
-	// Novo método para lidar com erros de API de forma consistente
-	handleApiError(
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		error: any,
-		defaultMessage = "Ocorreu um erro inesperado",
-	): void {
-		console.error("API Error:", error);
-
-		let title = "Erro";
-		let message = defaultMessage;
-		let type: NotificationType = "error";
-
-		// Verificar se é um erro do GLPI
-		if (error && error.name === "GLPIError") {
-			title = "Erro na operação";
-			message = error.getUserFriendlyMessage
-				? error.getUserFriendlyMessage()
-				: error.message;
-
-			// Definir o tipo com base no tipo de erro
-			if (error.errorType === "auth") {
-				type = "warning";
-				title = "Erro de autenticação";
-			} else if (error.errorType === "validation") {
-				type = "warning";
-				title = "Dados inválidos";
-			} else if (error.errorType === "network") {
-				type = "error";
-				title = "Erro de conexão";
-			}
-			// biome-ignore lint/complexity/useOptionalChain: <explanation>
-		} else if (error && error.message) {
-			message = error.message;
-		}
-
-		this.addNotification(title, message, type);
-	}
+// Função para obter notificações do usuário atual
+export function getNotifications(): Notification[] {
+  return notificationsCache
 }
 
-// Exporta uma instância única para uso em toda a aplicação
-export const notificationService = new NotificationService();
+// Função para obter notificações não lidas
+export function getUnreadNotifications(): Notification[] {
+  return notificationsCache.filter((notification) => !notification.read)
+}
+
+// Função para marcar uma notificação como lida
+export function markAsRead(notificationId: string): boolean {
+  const index = notificationsCache.findIndex((n) => n.id === notificationId)
+
+  if (index !== -1) {
+    notificationsCache[index] = {
+      ...notificationsCache[index],
+      read: true,
+    }
+
+    // Notificar todos os ouvintes
+    notifyListeners()
+    return true
+  }
+  return false
+}
+
+// Função para criar uma nova notificação
+export function createNotification(
+  title: string,
+  message: string,
+  type: "info" | "warning" | "success" | "error",
+  userId = "1", // Para desenvolvimento
+  options?: { link?: string; relatedItemId?: string; relatedItemType?: string },
+): Notification {
+  const newNotification: Notification = {
+    id: Date.now().toString(),
+    title,
+    message,
+    timestamp: new Date().toISOString(),
+    read: false,
+    type,
+    userId,
+    ...options,
+  }
+
+  // Adicionar ao cache
+  notificationsCache = [newNotification, ...notificationsCache]
+
+  // Notificar todos os ouvintes
+  notifyListeners()
+
+  return newNotification
+}
+
+// Função para excluir uma notificação
+export function deleteNotification(notificationId: string): boolean {
+  const initialLength = notificationsCache.length
+  notificationsCache = notificationsCache.filter((n) => n.id !== notificationId)
+
+  // Se a quantidade mudou, houve alteração
+  if (initialLength !== notificationsCache.length) {
+    // Notificar todos os ouvintes
+    notifyListeners()
+    return true
+  }
+  return false
+}
+
+// Função para marcar todas as notificações como lidas
+export function markAllAsRead(): boolean {
+  if (notificationsCache.some((n) => !n.read)) {
+    notificationsCache = notificationsCache.map((n) => ({ ...n, read: true }))
+
+    // Notificar todos os ouvintes
+    notifyListeners()
+    return true
+  }
+  return false
+}
+
+// Função para assinar mudanças nas notificações
+export function subscribe(listener: (notifications: Notification[]) => void): () => void {
+  listeners.push(listener)
+
+  // Retorna a função para cancelar a assinatura
+  return () => {
+    listeners = listeners.filter((l) => l !== listener)
+  }
+}
+
+// Função para notificar todos os ouvintes sobre mudanças
+function notifyListeners(): void {
+  // biome-ignore lint/complexity/noForEach: <explanation>
+  listeners.forEach((listener) => {
+    listener([...notificationsCache])
+  })
+}
+
+// Função para tratar erros da API
+export function handleApiError(error: unknown, message: string): void {
+  // Criar uma notificação de erro para o usuário
+  createNotification("Erro", message, "error")
+
+  // Registrar o erro com o gerenciador de erros
+  try {
+    errorHandler(message, error)
+  } catch (e) {
+    // Apenas registrar, não relançar
+    console.error("Erro ao processar erro da API:", e)
+  }
+}
+
+// Exportar todas as funções como um objeto
+export const notificationService = {
+  getNotifications,
+  getUnreadNotifications,
+  markAsRead,
+  createNotification,
+  deleteNotification,
+  markAllAsRead,
+  subscribe,
+  handleApiError,
+}
