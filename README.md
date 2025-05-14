@@ -4,7 +4,7 @@ Este é um sistema de gerenciamento de chamados desenvolvido para o CEAD (Coorde
 
 ## Funcionalidades
 
-- Autenticação de usuários
+- Autenticação de usuários com diferentes níveis de acesso (admin e usuário)
 - Abertura de chamados
 - Atribuição de chamados a técnicos ou grupos
 - Acompanhamento de status
@@ -28,12 +28,20 @@ Este é um sistema de gerenciamento de chamados desenvolvido para o CEAD (Coorde
 Crie um arquivo `.env.local` na raiz do projeto com as seguintes variáveis:
 
 \`\`\`
-# URL da API do GLPI
+# URL da API do GLPI (obrigatório para produção)
 NEXT_PUBLIC_GLPI_API_URL=http://seu-servidor-glpi/apirest.php
+GLPI_API_URL=http://seu-servidor-glpi/apirest.php
 
-# Tokens de autenticação do GLPI
+# Tokens de autenticação do GLPI (obrigatórios para produção)
 GLPI_APP_TOKEN=seu-app-token
 GLPI_USER_TOKEN=seu-user-token
+
+# Segredo para NextAuth (obrigatório)
+# Gere com: openssl rand -base64 32 ou node -e "console.log(crypto.randomBytes(32).toString('hex'))"
+NEXTAUTH_SECRET=seu-segredo-gerado
+
+# URL base da aplicação (obrigatório para produção)
+NEXT_PUBLIC_APP_URL=https://seu-dominio.com
 
 # Configuração do Redis (opcional, apenas para produção)
 REDIS_URL=redis://usuario:senha@seu-servidor-redis:6379
@@ -69,11 +77,45 @@ yarn dev
 ## Estrutura do Projeto
 
 - `/app` - Rotas e páginas da aplicação (Next.js App Router)
+  - `/admin` - Páginas administrativas (acesso restrito)
+  - `/dashboard` - Páginas de usuário comum
+  - `/api` - Rotas de API, incluindo autenticação
 - `/components` - Componentes React reutilizáveis
+  - `/ui` - Componentes de interface de usuário
+  - `/dashboard` - Componentes específicos do dashboard
 - `/lib` - Funções utilitárias e serviços
+  - `auth-glpi.ts` - Serviço de autenticação com GLPI
+  - `glpi-api.ts` - Cliente para API do GLPI
+  - `cache.ts` - Gerenciamento de cache
 - `/contexts` - Contextos React para gerenciamento de estado
+  - `auth-context.tsx` - Contexto de autenticação
 - `/types` - Definições de tipos TypeScript
 - `/public` - Arquivos estáticos (imagens, favicon, etc.)
+- `/config` - Arquivos de configuração
+
+## Sistema de Autenticação
+
+O sistema implementa autenticação baseada em NextAuth.js com integração ao GLPI:
+
+### Fluxo de Autenticação
+
+1. O usuário insere credenciais na página de login
+2. As credenciais são validadas contra a API do GLPI
+3. Se válidas, um token de sessão é gerado e armazenado
+4. O usuário é redirecionado com base em seu papel:
+   - Administradores: `/admin`
+   - Usuários comuns: `/dashboard`
+
+### Papéis de Usuário
+
+- **Administrador**: Acesso completo ao sistema, incluindo gerenciamento de chamados, categorias e relatórios
+- **Usuário**: Acesso limitado para abrir e acompanhar seus próprios chamados
+
+### Proteção de Rotas
+
+O sistema implementa proteção de rotas baseada em papéis:
+- Middleware verifica a autenticação e redireciona usuários não autorizados
+- Contexto de autenticação fornece informações do usuário em toda a aplicação
 
 ## Principais Funcionalidades
 
@@ -123,6 +165,20 @@ Em ambiente de desenvolvimento, o sistema utiliza dados simulados (mock data) pa
 
 Para usar dados reais durante o desenvolvimento, configure as variáveis de ambiente e altere a variável de ambiente `USE_MOCK_DATA` para "false".
 
+### Modo de Desenvolvimento vs. Produção
+
+#### Desenvolvimento
+- Autenticação simulada disponível (quando USE_MOCK_DATA=true)
+- Armazenamento de sessão em memória
+- Hot-reloading para atualizações em tempo real
+- Mensagens de erro detalhadas
+
+#### Produção
+- Autenticação real com GLPI obrigatória
+- Armazenamento de sessão em Redis recomendado
+- Otimizações de performance ativadas
+- Mensagens de erro genéricas para usuários finais
+
 ### Validação de Dados
 
 O sistema utiliza a biblioteca Zod para validação de dados nos formulários. Os schemas de validação estão definidos em `lib/validation.ts`.
@@ -161,6 +217,8 @@ Em ambiente de produção, recomenda-se:
 2. Utilizar um serviço como Vercel, Netlify ou servidor próprio com PM2
 3. Configurar HTTPS para segurança das comunicações
 4. Definir a variável `USE_MOCK_DATA` como "false"
+5. Gerar um NEXTAUTH_SECRET forte e único
+6. Configurar corretamente todas as variáveis de ambiente obrigatórias
 
 ## Recursos Adicionais
 
