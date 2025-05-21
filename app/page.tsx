@@ -2,14 +2,15 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { LoadingSpinner } from "@/components/loading-spinner"
+import { AlertCircle } from "lucide-react"
 import Image from "next/image"
 
 export default function LoginPage() {
@@ -32,11 +33,11 @@ export default function LoginPage() {
   }
 
   // Definir mensagem de erro com base no parâmetro
-  useState(() => {
+  useEffect(() => {
     if (errorParam) {
       setError(errorMessages[errorParam] || errorMessages.default)
     }
-  })
+  }, [errorParam])
 
   // Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,8 +90,10 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{error}</AlertDescription>
+              <Alert variant="destructive" className="mb-4 border-red-600 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertTitle className="text-red-600 font-medium">Erro</AlertTitle>
+                <AlertDescription className="text-red-600">{error}</AlertDescription>
               </Alert>
             )}
 
