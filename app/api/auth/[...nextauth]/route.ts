@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { authenticateWithGLPI, validateGLPIToken, renewGLPIToken } from "@/lib/auth-glpi"
+import { authenticateWithGLPI, renewGLPIToken, renewGLPITokenWithCredentials } from "@/lib/auth-glpi"
 
 // Configuração do NextAuth para autenticação com GLPI
 const handler = NextAuth({
@@ -33,6 +33,8 @@ const handler = NextAuth({
             role: result.user.role,
             isAdmin: result.user.role === "admin",
             glpiToken: result.sessionToken,
+            refreshToken: result.refreshToken,
+            tokenExpiresAt: result.expiresAt,
             // Armazenar credenciais para renovação (em produção, usar criptografia)
             username: credentials.email,
             password: credentials.password,
@@ -45,32 +47,52 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // Passar dados do usuário para o token
       if (user) {
         token.id = user.id
         token.role = user.role
         token.isAdmin = user.isAdmin
         token.glpiToken = user.glpiToken
+        token.refreshToken = user.refreshToken
+        token.tokenExpiresAt = user.tokenExpiresAt
         token.username = user.username
         token.password = user.password
       }
 
-      // Verificar se o token GLPI ainda é válido
-      if (token.glpiToken) {
-        const isValid = await validateGLPIToken(token.glpiToken as string)
+      // Verificar se o token GLPI está prestes a expirar (menos de 5 minutos)
+      if (token.tokenExpiresAt && Date.now() > (token.tokenExpiresAt as number) - 5 * 60 * 1000) {
+        console.log("Token GLPI está prestes a expirar, tentando renovar...")
 
-        if (!isValid && token.username && token.password) {
-          // Renovar token GLPI
-          const newToken = await renewGLPIToken(token.username as string, token.password as string)
+        // Tentar renovar com refresh token primeiro
+        if (token.refreshToken) {
+          const newTokens = await renewGLPIToken(token.refreshToken as string)
 
-          if (newToken) {
-            token.glpiToken = newToken
-          } else {
-            // Se não conseguir renovar, forçar novo login
-            token.error = "RefreshAccessTokenError"
+          if (newTokens) {
+            console.log("Token GLPI renovado com sucesso usando refresh token")
+            token.glpiToken = newTokens.sessionToken
+            token.refreshToken = newTokens.refreshToken
+            token.tokenExpiresAt = newTokens.expiresAt
+            return token
           }
         }
+
+        // Se não conseguir renovar com refresh token, tentar com credenciais
+        if (token.username && token.password) {
+          const newTokens = await renewGLPITokenWithCredentials(token.username as string, token.password as string)
+
+          if (newTokens) {
+            console.log("Token GLPI renovado com sucesso usando credenciais")
+            token.glpiToken = newTokens.sessionToken
+            token.refreshToken = newTokens.refreshToken
+            token.tokenExpiresAt = newTokens.expiresAt
+            return token
+          }
+        }
+
+        // Se não conseguir renovar, forçar novo login
+        console.error("Não foi possível renovar o token GLPI")
+        token.error = "RefreshAccessTokenError"
       }
 
       return token
@@ -82,7 +104,10 @@ const handler = NextAuth({
         session.user.role = token.role as string | undefined
         session.user.isAdmin = token.isAdmin as boolean | undefined
         session.user.glpiToken = token.glpiToken as string | undefined
-        session.error = token.error
+        session.error = token.error as string | undefined
+
+        // Adicionar informações de expiração para o cliente
+        session.expires = new Date((token.tokenExpiresAt as number) || Date.now() + 3600 * 1000).toISOString()
       }
 
       return session

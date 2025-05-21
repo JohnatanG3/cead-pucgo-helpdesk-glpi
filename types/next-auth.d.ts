@@ -7,14 +7,11 @@ declare module "next-auth" {
    */
   interface User {
     id: string
-    name?: string | null
-    email?: string | null
-    image?: string | null
     role?: string
     isAdmin?: boolean
     glpiToken?: string
-    sessionToken?: string
-    group_id?: string
+    refreshToken?: string
+    tokenExpiresAt?: number
     username?: string
     password?: string
   }
@@ -25,13 +22,10 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string
-      name?: string | null
-      email?: string | null
-      image?: string | null
       role?: string
       isAdmin?: boolean
       glpiToken?: string
-    }
+    } & DefaultSession["user"]
     error?: string
   }
 }
@@ -45,7 +39,8 @@ declare module "next-auth/jwt" {
     role?: string
     isAdmin?: boolean
     glpiToken?: string
-    sessionToken?: string
+    refreshToken?: string
+    tokenExpiresAt?: number
     username?: string
     password?: string
     error?: string

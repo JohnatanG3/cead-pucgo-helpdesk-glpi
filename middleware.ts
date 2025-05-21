@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
+import { Permission, hasPermission } from "@/lib/permissions"
+
+// Mapeamento de rotas para permissões necessárias
+const routePermissions: Record<string, Permission> = {
+  "/admin": Permission.MANAGE_SYSTEM,
+  "/admin/tickets": Permission.VIEW_ALL_TICKETS,
+  "/admin/reports": Permission.VIEW_REPORTS,
+  "/admin/categories": Permission.VIEW_CATEGORIES,
+  "/admin/users": Permission.VIEW_USERS,
+  "/dashboard/tickets": Permission.VIEW_OWN_TICKETS,
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -18,9 +29,6 @@ export async function middleware(request: NextRequest) {
   // Verificar se o usuário está autenticado
   const isAuthenticated = !!token
 
-  // Verificar se o usuário é administrador
-  const isAdmin = token?.isAdmin === true
-
   // Verificar se o token GLPI precisa ser renovado
   const needsTokenRefresh = token?.error === "RefreshAccessTokenError"
 
@@ -34,15 +42,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/?error=session_expired", request.url))
   }
 
-  // Verificar acesso a rotas de administrador
-  if (pathname.startsWith("/admin") && !isAdmin) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
-  }
+  // Verificar permissões para rotas específicas
+  if (isAuthenticated) {
+    const userRole = (token.role as string) || "user"
 
-  // Redirecionar usuário já autenticado da página inicial para o dashboard
-  if (isAuthenticated && pathname === "/") {
-    const redirectUrl = isAdmin ? "/admin" : "/dashboard"
-    return NextResponse.redirect(new URL(redirectUrl, request.url))
+    // Verificar permissões para a rota atual
+    for (const [route, permission] of Object.entries(routePermissions)) {
+      if (pathname.startsWith(route) && !hasPermission(userRole, permission)) {
+        // Redirecionar para dashboard se não tiver permissão
+        return NextResponse.redirect(new URL("/dashboard", request.url))
+      }
+    }
+
+    // Redirecionar usuário já autenticado da página inicial para o dashboard
+    if (pathname === "/") {
+      const redirectUrl = hasPermission(userRole, Permission.MANAGE_SYSTEM) ? "/admin" : "/dashboard"
+      return NextResponse.redirect(new URL(redirectUrl, request.url))
+    }
   }
 
   return NextResponse.next()
