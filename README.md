@@ -14,8 +14,12 @@ Este é um sistema de gerenciamento de chamados desenvolvido para o CEAD (Coorde
 - Sistema de notificações
 - Interface responsiva para dispositivos móveis
 - Perfis de usuário personalizáveis
-- Relatórios e estatísticas
+- Relatórios e estatísticas detalhadas
 - Gerenciamento de categorias
+- Renovação automática de token de autenticação
+- Histórico completo de chamados
+- Controle de acesso baseado em papéis (RBAC)
+- Dashboards interativos com métricas e gráficos
 
 ## Requisitos
 
@@ -39,6 +43,7 @@ GLPI_USER_TOKEN=seu-user-token
 # Segredo para NextAuth (obrigatório)
 # Gere com: openssl rand -base64 32 ou node -e "console.log(crypto.randomBytes(32).toString('hex'))"
 NEXTAUTH_SECRET=seu-segredo-gerado
+NEXTAUTH_URL=http://localhost:3000
 
 # URL base da aplicação (obrigatório para produção)
 NEXT_PUBLIC_APP_URL=https://seu-dominio.com
@@ -83,12 +88,18 @@ yarn dev
 - `/components` - Componentes React reutilizáveis
   - `/ui` - Componentes de interface de usuário
   - `/dashboard` - Componentes específicos do dashboard
+  - `/reports` - Componentes de relatórios e gráficos
 - `/lib` - Funções utilitárias e serviços
   - `auth-glpi.ts` - Serviço de autenticação com GLPI
   - `glpi-api.ts` - Cliente para API do GLPI
   - `cache.ts` - Gerenciamento de cache
+  - `permissions.ts` - Sistema de controle de acesso
 - `/contexts` - Contextos React para gerenciamento de estado
   - `auth-context.tsx` - Contexto de autenticação
+  - `token-refresh-context.tsx` - Contexto de renovação de token
+- `/hooks` - Hooks personalizados
+  - `use-permissions.ts` - Hook para verificação de permissões
+  - `use-token-refresh.ts` - Hook para renovação automática de token
 - `/types` - Definições de tipos TypeScript
 - `/public` - Arquivos estáticos (imagens, favicon, etc.)
 - `/config` - Arquivos de configuração
@@ -106,6 +117,15 @@ O sistema implementa autenticação baseada em NextAuth.js com integração ao G
    - Administradores: `/admin`
    - Usuários comuns: `/dashboard`
 
+### Renovação Automática de Token
+
+O sistema implementa renovação automática de token para evitar que o usuário seja desconectado:
+
+1. Um contexto de renovação de token monitora o tempo de expiração
+2. Quando o token está próximo de expirar, o sistema solicita automaticamente um novo
+3. A renovação ocorre em segundo plano, sem interrupção da experiência do usuário
+4. Logs de renovação são mantidos para auditoria
+
 ### Papéis de Usuário
 
 - **Administrador**: Acesso completo ao sistema, incluindo gerenciamento de chamados, categorias e relatórios
@@ -116,6 +136,7 @@ O sistema implementa autenticação baseada em NextAuth.js com integração ao G
 O sistema implementa proteção de rotas baseada em papéis:
 - Middleware verifica a autenticação e redireciona usuários não autorizados
 - Contexto de autenticação fornece informações do usuário em toda a aplicação
+- Componente PermissionGuard protege componentes baseado em permissões específicas
 
 ## Principais Funcionalidades
 
@@ -125,13 +146,30 @@ O sistema implementa proteção de rotas baseada em papéis:
 - Atribuição de prioridades e categorias
 - Upload de anexos e documentos
 - Comentários e atualizações de status
+- Histórico completo de alterações em chamados
+
+### Histórico de Chamados
+
+- Registro detalhado de todas as alterações em chamados
+- Visualização cronológica de ações realizadas
+- Informações sobre quem realizou cada alteração
+- Filtros por data e tipo de alteração
 
 ### Painel Administrativo
 
 - Gerenciamento de todos os chamados
 - Atribuição de chamados a técnicos
 - Gerenciamento de categorias
-- Relatórios e estatísticas
+- Relatórios e estatísticas avançadas
+- Dashboards interativos com métricas em tempo real
+
+### Relatórios e Dashboards
+
+- Visualização de métricas de desempenho
+- Gráficos de distribuição de chamados por categoria
+- Relatórios de tempo médio de resolução
+- Análise de atividade de usuários
+- Filtros por período e exportação de dados
 
 ### Perfil de Usuário
 
@@ -140,11 +178,18 @@ O sistema implementa proteção de rotas baseada em papéis:
 - Preferências de notificação
 - Histórico de atividades
 
+### Controle de Acesso Baseado em Papéis
+
+- Definição granular de permissões por função
+- Restrição de acesso a funcionalidades específicas
+- Verificação de permissões em nível de componente
+- Proteção de rotas baseada em papéis de usuário
+
 ### Integração com o GLPI
 
 O sistema se comunica com o GLPI através de sua API REST. As principais funcionalidades implementadas são:
 
-- Autenticação via token
+- Autenticação via token com renovação automática
 - Listagem e criação de chamados
 - Upload de documentos
 - Gerenciamento de categorias
@@ -229,6 +274,10 @@ Em ambiente de produção, recomenda-se:
 - Filtros avançados para busca de chamados
 - Perfis de usuário personalizáveis
 - Relatórios detalhados para administradores
+- Renovação automática de token de autenticação
+- Histórico completo de alterações em chamados
+- Controle de acesso baseado em papéis
+- Dashboards interativos com métricas em tempo real
 
 ## Licença
 
