@@ -69,7 +69,6 @@ export function validate<T>(schema: z.ZodType<T>, data: unknown): ValidationResu
     if (error instanceof z.ZodError) {
       const errors: Record<string, string[]> = {}
 
-      // biome-ignore lint/complexity/noForEach: <explanation>
       error.errors.forEach((err) => {
         const path = err.path.join(".") || "value"
         if (!errors[path]) {

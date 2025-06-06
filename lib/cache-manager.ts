@@ -5,7 +5,6 @@
 
 // Tipo para o cache
 type CacheData = {
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   value: any
   expires: number | null
 }

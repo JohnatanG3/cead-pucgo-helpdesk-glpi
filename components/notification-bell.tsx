@@ -69,8 +69,7 @@ export function NotificationBell() {
           {notifications.length > 0 ? (
             <div className="divide-y">
               {notifications.map((notification) => (
-                // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-<div
+                <div
                   key={notification.id}
                   className={cn(
                     "flex items-start gap-3 p-3 transition-colors cursor-pointer",

@@ -160,7 +160,6 @@ export default function TicketsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          {/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Carregando chamados...</p>
         </div>
@@ -400,10 +399,10 @@ export default function TicketsPage() {
             reservados.
           </p>
           <div className="flex items-center gap-4">
-            <a href="/termo-de-uso" className="text-sm text-muted-foreground hover:underline">
+            <a href="#" className="text-sm text-muted-foreground hover:underline">
               Termos de Uso
             </a>
-            <a href="/politica-de-privacidade" className="text-sm text-muted-foreground hover:underline">
+            <a href="#" className="text-sm text-muted-foreground hover:underline">
               Política de Privacidade
             </a>
           </div>

@@ -122,8 +122,7 @@ export default function ReportsPage() {
   }
 
   // Função para exportar dados para CSV
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    function exportToCSV(data: any[], filename: string) {
+  function exportToCSV(data: any[], filename: string) {
     if (!data.length) return
 
     // Obter cabeçalhos
@@ -131,7 +130,6 @@ export default function ReportsPage() {
 
     // Criar conteúdo CSV
     const csvContent =
-      // biome-ignore lint/style/useTemplate: <explanation>
       headers.join(",") +
       "\n" +
       data
@@ -162,7 +160,6 @@ export default function ReportsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          {/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Carregando relatórios...</p>
         </div>

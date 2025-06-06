@@ -18,7 +18,6 @@ interface FilterOption {
   label: string
   type: "select" | "checkbox" | "radio" | "date" | "text"
   options?: { value: string; label: string }[]
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   value?: any
 }
 
@@ -34,7 +33,6 @@ export function AdvancedFilters({ filters, onFilterChange, onSearch, className }
   const [searchQuery, setSearchQuery] = useState("")
   const [isOpen, setIsOpen] = useState(false)
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const handleFilterChange = (id: string, value: any) => {
     const updatedFilters = activeFilters.map((filter) => {
       if (filter.id === id) {

@@ -7,7 +7,6 @@ import { getTicketById } from "@/lib/glpi-api"
 export default async function AdminTicketDetailPage({ params }: { params: { id: string } }) {
   try {
     const ticketId = Number.parseInt(params.id)
-    // biome-ignore lint/suspicious/noGlobalIsNan: <explanation>
     if (isNaN(ticketId)) {
       return notFound()
     }

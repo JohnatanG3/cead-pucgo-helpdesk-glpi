@@ -23,7 +23,6 @@ export function RealTimeValidation({ value, rules, showValid = true, className }
   useEffect(() => {
     const newValidations: Record<string, boolean> = {}
 
-    // biome-ignore lint/complexity/noForEach: <explanation>
     rules.forEach((rule) => {
       newValidations[rule.id] = rule.validate(value)
     })

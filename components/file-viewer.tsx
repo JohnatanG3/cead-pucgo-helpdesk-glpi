@@ -40,28 +40,20 @@ export function FileViewer({ file, onDelete, isReadOnly = false, className }: Fi
 
     if (mime.startsWith("image/")) {
       return <ImageIcon className="h-5 w-5" />
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (mime === "application/pdf") {
       return <FilePdf className="h-5 w-5" />
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (mime.includes("spreadsheet") || mime.includes("excel") || mime.includes("csv")) {
       return <FileSpreadsheet className="h-5 w-5" />
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (mime.includes("zip") || mime.includes("rar") || mime.includes("tar") || mime.includes("compressed")) {
       return <FileArchive className="h-5 w-5" />
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (mime.startsWith("audio/")) {
       return <FileAudio className="h-5 w-5" />
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (mime.startsWith("video/")) {
       return <FileVideo className="h-5 w-5" />
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (mime.includes("code") || mime.includes("javascript") || mime.includes("html") || mime.includes("css")) {
       return <FileCode className="h-5 w-5" />
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (mime.includes("text/")) {
       return <FileText className="h-5 w-5" />
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else {
       return <File className="h-5 w-5" />
     }
@@ -100,10 +92,8 @@ export function FileViewer({ file, onDelete, isReadOnly = false, className }: Fi
           />
         </div>
       )
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (mime === "application/pdf") {
       return <iframe src={`${file.url}#toolbar=0`} className="h-[70vh] w-full" title={file.name} />
-    // biome-ignore lint/style/noUselessElse: <explanation>
     } else {
       return (
         <div className="flex flex-col items-center justify-center p-8 text-center">

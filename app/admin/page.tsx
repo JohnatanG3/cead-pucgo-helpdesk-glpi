@@ -168,7 +168,7 @@ export default function AdminDashboard() {
       { title: "Total de Chamados", value: total, change: `${total} chamados no sistema` },
       { title: "Pendentes", value: pending, change: `${pending} aguardando atendimento` },
       { title: "Em Andamento", value: inProgress, change: `${inProgress} em processamento` },
-      { title: "Resolvidos (Mês)", value: resolved, change: "Satisfação: N/A" },
+      { title: "Resolvidos (Mês)", value: resolved, change: `Satisfação: N/A` },
     ]
   }
 
@@ -189,7 +189,6 @@ export default function AdminDashboard() {
 
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
-            {/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <p className="mt-4 text-muted-foreground">Carregando...</p>
             <Button
@@ -292,8 +291,7 @@ export default function AdminDashboard() {
           {/* Cards de estatísticas responsivos */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {currentStats.map((stat, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-<Card key={index}>
+              <Card key={index}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                 </CardHeader>

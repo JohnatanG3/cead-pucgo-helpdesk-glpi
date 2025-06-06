@@ -65,8 +65,7 @@ export function FileInput({
           <p className="text-sm font-medium">Arquivos selecionados:</p>
           <ul className="space-y-2">
             {selectedFiles.map((file, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-<li key={index} className="flex items-center justify-between rounded-md border p-2 text-sm">
+              <li key={index} className="flex items-center justify-between rounded-md border p-2 text-sm">
                 <div className="flex items-center gap-2 truncate">
                   <Paperclip className="h-4 w-4 text-muted-foreground" />
                   <span className="truncate">{file.name}</span>

@@ -6,10 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "setup-db": "ts-node scripts/setup-database.js",
-    "debug-db": "ts-node scripts/debug-database.js",
-    "fix-admin": "ts-node scripts/fix-admin.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.7",

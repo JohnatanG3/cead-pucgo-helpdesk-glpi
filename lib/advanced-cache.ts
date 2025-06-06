@@ -13,7 +13,6 @@ interface CacheOptions {
 }
 
 class AdvancedCache {
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   private cache: Map<string, CacheItem<any>> = new Map()
   private defaultTTL = 300 // 5 minutos em segundos
   private persistenceEnabled: boolean = typeof window !== "undefined"
@@ -170,7 +169,6 @@ class AdvancedCache {
     if (!this.persistenceEnabled) return
 
     try {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       const serialized: Record<string, CacheItem<any>> = {}
 
       for (const [key, item] of this.cache.entries()) {
@@ -196,7 +194,6 @@ class AdvancedCache {
       const serialized = localStorage.getItem("app_cache")
 
       if (serialized) {
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         const data = JSON.parse(serialized) as Record<string, CacheItem<any>>
 
         for (const [key, item] of Object.entries(data)) {

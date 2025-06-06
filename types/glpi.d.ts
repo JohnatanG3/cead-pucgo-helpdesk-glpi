@@ -17,7 +17,6 @@ export interface GLPITicket {
   time_to_resolve?: string
   global_validation?: number
   type?: number
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   [key: string]: any
 }
 
@@ -33,7 +32,6 @@ export interface GLPIUser {
   profiles_id?: number
   entities_id?: number
   is_active?: boolean
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   [key: string]: any
 }
 
@@ -47,7 +45,6 @@ export interface GLPICategory {
   sons_cache?: string
   entities_id?: number
   is_recursive?: boolean
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   [key: string]: any
 }
 
@@ -62,7 +59,6 @@ export interface GLPIAttachment {
   date_mod: string
   users_id: number
   tickets_id?: number
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   [key: string]: any
 }
 
@@ -75,7 +71,6 @@ export interface GLPITicketHistory {
   id_search_option: number
   old_value: string
   new_value: string
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   [key: string]: any
 }
 
@@ -88,6 +83,5 @@ export interface GLPISession {
 export interface GLPIError {
   statusCode: number
   message: string
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   errorDetails?: any
 }

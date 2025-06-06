@@ -9,7 +9,6 @@ export interface Notification {
   read: boolean
   createdAt: string
   link?: string
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   metadata?: Record<string, any>
 }
 
@@ -23,7 +22,6 @@ export interface TicketHistoryEntry {
   oldValue?: string
   newValue?: string
   timestamp: string
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   metadata?: Record<string, any>
 }
 
@@ -47,7 +45,6 @@ export interface FileViewerProps {
 export interface FilterOption {
   id: string
   label: string
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   value: any
 }
 
@@ -58,7 +55,6 @@ export interface FilterGroup {
 }
 
 export interface FilterState {
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   [key: string]: any
 }
 
@@ -96,7 +92,6 @@ export interface ErrorDetails {
   code: string
   message: string
   stack?: string
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   context?: Record<string, any>
 }
 
@@ -110,7 +105,6 @@ export interface AppError extends Error {
 export interface User extends GLPIUser {
   role: string
   permissions?: string[]
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   preferences?: Record<string, any>
   glpiToken?: string
 }

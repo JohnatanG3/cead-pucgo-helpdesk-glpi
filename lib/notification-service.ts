@@ -148,7 +148,6 @@ export function subscribe(listener: (notifications: Notification[]) => void): ()
 
 // Função para notificar todos os ouvintes sobre mudanças
 function notifyListeners(): void {
-  // biome-ignore lint/complexity/noForEach: <explanation>
   listeners.forEach((listener) => {
     listener([...notificationsCache])
   })

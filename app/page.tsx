@@ -10,40 +10,34 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { LoadingSpinner } from "@/components/loading-spinner"
-import { AlertCircle, CheckCircle } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 import Image from "next/image"
-import Link from "next/link"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
 
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  // Verificar se há erro ou sucesso na URL
+  // Verificar se há erro na URL
   const errorParam = searchParams.get("error")
-  const registeredParam = searchParams.get("registered")
 
   // Mapear erros de autenticação
   const errorMessages: Record<string, string> = {
-    CredentialsSignin: "Email ou senha incorretos.",
+    CredentialsSignin: "Usuário ou senha inválidos.",
     session_expired: "Sua sessão expirou. Por favor, faça login novamente.",
     default: "Ocorreu um erro durante o login. Tente novamente.",
   }
 
-  // Definir mensagem de erro ou sucesso com base nos parâmetros
+  // Definir mensagem de erro com base no parâmetro
   useEffect(() => {
     if (errorParam) {
       setError(errorMessages[errorParam] || errorMessages.default)
     }
-    if (registeredParam === "true") {
-      setSuccess("Conta criada com sucesso! Faça login com suas credenciais.")
-    }
-  }, [errorParam, registeredParam])
+  }, [errorParam])
 
   // Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,15 +48,9 @@ export default function LoginPage() {
       return
     }
 
-    if (!username.includes("@")) {
-      setError("Por favor, digite um email válido.")
-      return
-    }
-
     try {
       setIsLoading(true)
       setError("")
-      setSuccess("")
 
       const result = await signIn("credentials", {
         username,
@@ -74,6 +62,7 @@ export default function LoginPage() {
         setError(errorMessages[result.error] || errorMessages.default)
       } else if (result?.ok) {
         // Redirecionar para a página apropriada após login bem-sucedido
+        // O middleware cuidará do redirecionamento com base no tipo de usuário
         router.push("/dashboard")
         router.refresh()
       }
@@ -108,25 +97,17 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            {success && (
-              <Alert className="mb-4 border-green-600 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertTitle className="text-green-600 font-medium">Sucesso</AlertTitle>
-                <AlertDescription className="text-green-600">{success}</AlertDescription>
-              </Alert>
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="username" className="text-sm font-medium">
-                  Email Institucional
+                  Usuário
                 </label>
                 <Input
                   id="username"
-                  type="email"
+                  type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="seu.email@pucgo.edu.br"
+                  placeholder="Seu usuário PUC"
                   disabled={isLoading}
                   required
                 />
@@ -159,17 +140,9 @@ export default function LoginPage() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4 text-sm text-gray-600">
-            <div className="text-center">
-              <p>Não tem uma conta?</p>
-              <Link href="/register" className="text-blue-600 hover:underline font-medium">
-                Criar conta institucional
-              </Link>
-            </div>
-            <div className="text-center space-y-1">
-              <p>Use suas credenciais institucionais da PUC Goiás para acessar o sistema.</p>
-              <p>Em caso de problemas, entre em contato com o suporte do CEAD.</p>
-            </div>
+          <CardFooter className="flex flex-col space-y-2 text-sm text-gray-600">
+            <p>Use suas credenciais institucionais da PUC Goiás para acessar o sistema.</p>
+            <p>Em caso de problemas, entre em contato com o suporte do CEAD.</p>
           </CardFooter>
         </Card>
       </div>
