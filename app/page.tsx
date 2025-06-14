@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { signIn } from "next-auth/react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { AlertCircle } from "lucide-react"
 import Image from "next/image"
+import { mockUsers } from "@/lib/mock-data"
+import { useAuth } from "@/contexts/auth-context"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -21,6 +24,15 @@ export default function LoginPage() {
 
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { login } = useAuth()
+  const usernameInputRef = useRef<HTMLInputElement>(null)
+
+  // Focus automático no campo de usuário
+  useEffect(() => {
+    if (usernameInputRef.current) {
+      usernameInputRef.current.focus()
+    }
+  }, [])
 
   // Verificar se há erro na URL
   const errorParam = searchParams.get("error")
@@ -39,6 +51,13 @@ export default function LoginPage() {
     }
   }, [errorParam])
 
+  // Função para extrair o primeiro nome do email
+  const getFirstNameFromEmail = (email: string) => {
+    const namePart = email.split("@")[0]
+    const firstName = namePart.split(".")[0]
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1)
+  }
+
   // Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,19 +71,62 @@ export default function LoginPage() {
       setIsLoading(true)
       setError("")
 
-      const result = await signIn("credentials", {
-        username,
-        password,
-        redirect: false,
-      })
+      // Verificar se estamos usando dados simulados
+      const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
 
-      if (result?.error) {
-        setError(errorMessages[result.error] || errorMessages.default)
-      } else if (result?.ok) {
-        // Redirecionar para a página apropriada após login bem-sucedido
-        // O middleware cuidará do redirecionamento com base no tipo de usuário
-        router.push("/dashboard")
-        router.refresh()
+      if (useMockData) {
+        // Simular delay de autenticação
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+
+        // Autenticação com dados simulados
+        const user = mockUsers.find((u) => u.email === username && u.password === password)
+
+        if (user) {
+          // Usar o contexto de autenticação para login
+          login(user, "mock-session-token")
+
+          // Mostrar toast de boas-vindas
+          const firstName = getFirstNameFromEmail(user.email)
+          toast.success(`Bem-vindo, ${firstName}!`, {
+            description: "Login realizado com sucesso.",
+            duration: 4000,
+            style: {
+              background: "#10b981",
+              color: "white",
+              border: "none",
+            },
+          })
+
+          return
+        } else {
+          setError("Usuário ou senha inválidos.")
+        }
+      } else {
+        // Autenticação real com NextAuth
+        const result = await signIn("credentials", {
+          username,
+          password,
+          redirect: false,
+        })
+
+        if (result?.error) {
+          setError(errorMessages[result.error] || errorMessages.default)
+        } else if (result?.ok) {
+          // Mostrar toast de boas-vindas
+          const firstName = getFirstNameFromEmail(username)
+          toast.success(`Bem-vindo, ${firstName}!`, {
+            description: "Login realizado com sucesso.",
+            duration: 4000,
+            style: {
+              background: "#10b981",
+              color: "white",
+              border: "none",
+            },
+          })
+
+          router.push("/dashboard")
+          router.refresh()
+        }
       }
     } catch (err) {
       setError("Ocorreu um erro durante o login. Tente novamente.")
@@ -103,6 +165,7 @@ export default function LoginPage() {
                   Usuário
                 </label>
                 <Input
+                  ref={usernameInputRef}
                   id="username"
                   type="text"
                   value={username}
@@ -143,6 +206,20 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col space-y-2 text-sm text-gray-600">
             <p>Use suas credenciais institucionais da PUC Goiás para acessar o sistema.</p>
             <p>Em caso de problemas, entre em contato com o suporte do CEAD.</p>
+            <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200">
+              <p className="text-xs text-blue-800 font-medium mb-2">Credenciais para demonstração:</p>
+              <div className="text-xs text-blue-700 space-y-1">
+                <p>
+                  <strong>Admin:</strong> admin@pucgoias.edu.br / admin123
+                </p>
+                <p>
+                  <strong>Usuário:</strong> usuario@pucgoias.edu.br / user123
+                </p>
+                <p>
+                  <strong>Suporte:</strong> suporte@pucgoias.edu.br / suporte123
+                </p>
+              </div>
+            </div>
           </CardFooter>
         </Card>
       </div>

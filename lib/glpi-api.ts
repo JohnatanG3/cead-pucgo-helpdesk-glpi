@@ -1,6 +1,8 @@
 import { notificationService } from "./notification-service"
 import { cacheManager } from "./cache-manager"
 import { getSession } from "next-auth/react"
+// Importar os dados simulados
+import { mockDataService, mockCategories, mockGroups, mockUsers, mockStats } from "./mock-data"
 
 // Configuração base da API GLPI
 const GLPI_API_URL = process.env.GLPI_API_URL || "https://glpi.pucgoias.edu.br/apirest.php"
@@ -137,6 +139,14 @@ export async function handleApiRequest<T>(
  * Obtém uma lista de chamados do GLPI
  */
 export async function getTickets(params?: Record<string, string>): Promise<any[]> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para getTickets")
+    return mockDataService.getTickets()
+  }
+
   let endpoint = `Ticket?expand_dropdowns=true`
   if (params) {
     endpoint += "&" + new URLSearchParams(params).toString()
@@ -148,6 +158,14 @@ export async function getTickets(params?: Record<string, string>): Promise<any[]
  * Obtém um chamado específico do GLPI pelo ID
  */
 export async function getTicket(id: number): Promise<any> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para getTicket")
+    return mockDataService.getTicketById(id)
+  }
+
   return fetchGLPI<any>(`Ticket/${id}?expand_dropdowns=true`)
 }
 
@@ -155,6 +173,14 @@ export async function getTicket(id: number): Promise<any> {
  * Obtém um chamado específico do GLPI pelo ID
  */
 export async function getTicketById(id: number): Promise<any> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para getTicketById")
+    return mockDataService.getTicketById(id)
+  }
+
   return fetchGLPI<any>(`Ticket/${id}?expand_dropdowns=true`)
 }
 
@@ -162,6 +188,14 @@ export async function getTicketById(id: number): Promise<any> {
  * Cria um novo chamado no GLPI
  */
 export async function createTicket(ticketData: any): Promise<any> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para createTicket")
+    return mockDataService.createTicket(ticketData)
+  }
+
   return fetchGLPI<any>("Ticket", {
     method: "POST",
     body: JSON.stringify(ticketData),
@@ -172,6 +206,15 @@ export async function createTicket(ticketData: any): Promise<any> {
  * Atualiza um chamado existente no GLPI
  */
 export async function updateTicket(id: number, ticketData: any): Promise<void> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para updateTicket")
+    mockDataService.updateTicket(id, ticketData)
+    return
+  }
+
   await fetchGLPI<void>(`Ticket/${id}`, {
     method: "PUT",
     body: JSON.stringify(ticketData),
@@ -191,6 +234,14 @@ export async function deleteTicket(id: number): Promise<void> {
  * Obtém uma lista de usuários do GLPI
  */
 export async function getUsers(params?: Record<string, string>): Promise<any[]> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para getUsers")
+    return mockUsers
+  }
+
   let endpoint = `User?expand_dropdowns=true`
   if (params) {
     endpoint += "&" + new URLSearchParams(params).toString()
@@ -209,6 +260,14 @@ export async function getUser(id: number): Promise<any> {
  * Obtém uma lista de categorias do GLPI
  */
 export async function getCategories(): Promise<any[]> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para getCategories")
+    return mockCategories
+  }
+
   return fetchGLPI<any[]>("ITILCategory?range=0-999")
 }
 
@@ -245,6 +304,14 @@ export async function deleteCategory(id: number): Promise<void> {
  * Obtém uma lista de grupos do GLPI
  */
 export async function getGroups(): Promise<any[]> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para getGroups")
+    return mockGroups
+  }
+
   return fetchGLPI<any[]>("Group?range=0-999")
 }
 
@@ -259,6 +326,14 @@ export async function getTicketHistory(ticketId: number): Promise<any[]> {
  * Adiciona um comentário a um chamado
  */
 export async function addTicketFollowup(followupData: any): Promise<any> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para addTicketFollowup")
+    return mockDataService.addTicketFollowup(followupData)
+  }
+
   return fetchGLPI<any>("ITILFollowup", {
     method: "POST",
     body: JSON.stringify(followupData),
@@ -269,6 +344,14 @@ export async function addTicketFollowup(followupData: any): Promise<any> {
  * Obtém os followups de um ticket
  */
 export async function getTicketFollowups(ticketId: number): Promise<any[]> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para getTicketFollowups")
+    return mockDataService.getTicketFollowups(ticketId)
+  }
+
   return fetchGLPI<any[]>(`ITILFollowup?criteria[0][field]=tickets_id&criteria[0][value]=${ticketId}`)
 }
 
@@ -276,6 +359,14 @@ export async function getTicketFollowups(ticketId: number): Promise<any[]> {
  * Upload de um documento para o GLPI
  */
 export async function uploadDocument(file: File, userId: number): Promise<any> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para uploadDocument")
+    return mockDataService.uploadDocument(file, userId)
+  }
+
   const formData = new FormData()
   formData.append("upload[filename]", file)
   formData.append("upload[name]", file.name)
@@ -290,6 +381,15 @@ export async function uploadDocument(file: File, userId: number): Promise<any> {
  * Vincula um documento a um chamado
  */
 export async function linkDocumentToTicket(documentId: number, ticketId: number): Promise<void> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para linkDocumentToTicket")
+    mockDataService.linkDocumentToTicket(documentId, ticketId)
+    return
+  }
+
   const linkData = {
     input: [
       {
@@ -310,6 +410,14 @@ export async function linkDocumentToTicket(documentId: number, ticketId: number)
  * Obtém os documentos de um chamado
  */
 export async function getTicketDocuments(ticketId: number): Promise<any[]> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para getTicketDocuments")
+    return mockDataService.getTicketDocuments(ticketId)
+  }
+
   return fetchGLPI<any[]>(
     `DocumentItem?criteria[0][field]=items_id&criteria[0][value]=${ticketId}&criteria[0][searchtype]=equals&criteria[1][field]=itemtype&criteria[1][value]=Ticket&criteria[1][searchtype]=equals&range=0-999`,
   )
@@ -328,6 +436,14 @@ export async function deleteDocument(documentId: number): Promise<void> {
  * Obtém estatísticas dos chamados
  */
 export async function getTicketStats(): Promise<any> {
+  // Verificar se estamos usando dados simulados
+  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" || true
+
+  if (useMockData) {
+    console.log("Usando dados simulados para getTicketStats")
+    return mockStats
+  }
+
   return fetchGLPI<any>("getTicketStats")
 }
 

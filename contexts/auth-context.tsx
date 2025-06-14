@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Função de login modificada para usar window.location.href para redirecionamento
+  // Função de login modificada para usar dados simulados quando necessário
   const login = (userData: User, token: string) => {
     try {
       console.log("Login iniciado para:", userData)
